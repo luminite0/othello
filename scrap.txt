@@ -1,0 +1,462 @@
+'''
+	# check if each tile has a color, if so assign the correct surface and mark the tile as 'active'
+	for element in range(len(tiles_list)):
+		if tiles_list[element].tile_color != None:
+			if tiles_list[element].tile_color == 'BLACK':
+				tiles_list[element].tile_surf = black_tile_surf
+				tiles_list[element].active = True
+			elif tiles_list[element].tile_color == 'WHITE':
+				tiles_list[element].tile_surf = white_tile_surf
+				tiles_list[element].active = True
+	'''
+'''
+			for element in range(len(tiles_list)):
+				if tiles_list[element].tile_surf != None:			
+					if (clickx <= WINDOW_BOARD_GAP + BOARD_WIDTH) and (clickx >= WINDOW_BOARD_GAP+1):
+						if (clicky <= WINDOW_BOARD_GAP) and (clicky >= WINDOW_BOARD_GAP+1):
+						# the +1 is because x(or y)=100 and x(or y)=101 should not be clickable
+							if ((clickx >= tiles_list[element].xcoord) and \
+							(clickx <= (tiles_list[element].xcoord + BOX_CLICKABLE_WIDTH)) and \
+							((clicky >= tiles_list[element].ycoord) and \
+							(clicky <= (tiles_list[element].ycoord + BOX_CLICKABLE_WIDTH)))):					
+							'''
+'''			
+						tiles_list[element].active = True
+						player_color = 'BLACK'
+						if player_color == 'BLACK':
+							tiles_list[element].tile_surf = black_tile_surf
+							tiles_list[element].tile_rect = tiles_list[element].tile_surf.get_rect(\
+															topleft=(tiles_list[element].xcoord, \
+															tiles_list[element].ycoord))
+						elif player_color == 'WHITE':
+							tiles_list[element].tile_surf = white_tile_surf
+						'''	
+# function to figure out which box the mouse is in 
+def which_box(clickedWhereX,clickedWhereY,mouse_clicked=False):
+	checkDistance = WINDOW_WIDTH - WINDOW_BOARD_GAP
+	for i in range(8):
+		if (clickedWhereX >= checkDistance) | (clickedWhereY >= checkDistance):
+			return -1
+		elif clickedWhereX >= int(tiles_list[7-i].xcoord):
+			clickedWhereX -= BOX_CLICKABLE_WIDTH
+			return 7-i
+			
+	if (clickedWhereX >= WINDOW_WIDTH - WINDOW_BOARD_GAP)|(clickedWhereY >= WINDOW_WIDTH - WINDOW_BOARD_GAP):
+		return -1
+	elif clickedWhereX >= WINDOW_WIDTH - WINDOW_BOARD_GAP - 1:
+		return 7 
+	if mouse_clicked == True:
+		clickIndexY = (clickedWhereX - 102) / 44
+		clickIndexX = (clickedWhereY - 102) /44		
+
+for element in range(len(tiles_list)):
+					
+					# checks to see if each tile is clicked and if it is not already active,
+					# if so sets that tile to active and gives it the right surf
+					if tiles_list[element].tile_rect.collidepoint((player.mouse_x, player.mouse_y))\
+						and tiles_list[element].active != True:
+						
+						# sets tile o active so it will be blitted to board
+						tiles_list[element].active = True
+
+						if player.color == 'BLACK':
+							tiles_list[element].surf = black_tile_surf
+							board.turn = 'ai'
+						elif player.color == 'WHITE':
+							tiles_list[element].surf = white_tile_surf		
+							board.turn = 'player'
+						else:
+							# player chose random color
+							if random.randint(0,1) == 0:	
+								player.color = 'BLACK'
+								tiles_list[element].surf = black_tile_surf								
+								board.turn = 'ai'
+							else:
+								player.color = 'WHITE'
+								tiles_list[element].surf = white_tile_surf								
+								board.turn = 'player'
+
+					# checks to see if each tile is active				
+					# if the tile is active, blit its surf to the screen
+					# and get its rect
+					elif tiles_list[element].active == True:
+						main_surface.blit(tiles_list[element].surf, (tiles_list[element].xcoord, tiles_list[element].ycoord))
+						tiles_list[element].surf = tiles_list[element].surf.get_rect()
+					else:
+						main_surface.blit(tile_surf, (tiles_list[element].xcoord, tiles_list[element].ycoord))
+						tiles_list[element].surf = tiles_list[element].surf.get_rect()
+				
+'''
+# tiles class
+class Tiles(object):
+	
+	def __init__(self, surf, active, x, y):
+		"""Create variables for each tile's
+		surf, rect, top left x and y coords, 
+		and whether or not the tile is active.
+		"""
+		self.surf = surf
+		self.tile_rect = None
+		self.active = active
+		self.xcoord = x
+		self.ycoord = y
+'''
+
+'''# - - - - - - - - - - #
+# random number to randomly determine middle four tile colors
+random_num = random.randint(0,1)
+# draw middle four tiles to board
+# only needs to be done once, not in loop, otherwise might
+# override game rules
+if random_num == 1:
+	tiles_list[27].surf = black_tile_surf
+	tiles_list[28].surf = white_tile_surf
+	tiles_list[35].surf = white_tile_surf
+	tiles_list[36].surf = black_tile_surf
+else:
+	tiles_list[27].surf = white_tile_surf
+	tiles_list[28].surf = black_tile_surf
+	tiles_list[35].surf = black_tile_surf
+	tiles_list[36].surf = white_tile_surf
+# make the tiles active so they actually blit (see loop below)
+tiles_list[27].active = True
+tiles_list[28].active = True
+tiles_list[35].active = True
+tiles_list[36].active = True
+'''	
+
+
+
+
+0 0
+1 0
+2 0
+3 0
+4 0
+5 0
+6 0
+7 0
+
+0 1
+1 1
+2 1
+3 1
+4 1
+5 1
+6 1
+7 1
+
+0 2
+1 2
+2 2
+3 2
+4 2
+5 2
+6 2
+7 2
+
+0 3
+1 3
+2 3
+3 3
+4 3
+5 3
+6 3
+7 3
+
+0 4
+1 4
+2 4
+3 4
+4 4
+5 4
+6 4
+7 4
+
+0 5
+1 5
+2 5
+3 5
+4 5
+5 5
+6 5
+7 5
+
+0 6
+1 6
+2 6
+3 6
+4 6
+5 6
+6 6
+7 6
+
+0 7
+1 7
+2 7
+3 7
+4 7
+5 7
+6 7
+7 7
+
+and \
+			((d.index - 1) % 7 != 1) and (d.index % 7 != 1):
+
+class Board(object):
+	"""class for the game turn, disks and game started
+	"""
+	def __init__(self):
+		self.disks = []
+		self.game_started = False
+		self.turn = None
+
+def draw_start_board():
+	"""draw the menu that lets the player choose their color
+	"""
+	main_surface.fill(GREEN)
+	main_surface.blit(select_black_font, (150,100))
+	black_font_rect = select_black_font.get_rect(topleft=(155,120), bottomright=(335,160))
+	main_surface.blit(select_white_font, (150,200))
+	white_font_rect = select_white_font.get_rect(topleft=(150,220),\
+												bottomright=(335,260))
+	main_surface.blit(select_random_font, (150,300))
+	random_font_rect = select_random_font.get_rect(topleft=(155,320), \
+				  								bottomright=(400,360))
+	if player.x != 0 and player.y != 0:
+		if black_font_rect.collidepoint((player.x, player.y)):
+			player.surf = black_disk_image
+			ai.surf = white_disk_image
+			board.game_started = True
+			player.x, player.y = 0, 0
+		elif white_font_rect.collidepoint((player.x, player.y)):
+			player.surf = white_disk_image
+			ai.surf = black_disk_image
+			board.game_started = True
+			player.x, player.y = 0, 0
+		elif random_font_rect.collidepoint((player.x, player.y)):
+			player.surf = random.choice([black_disk_image, white_disk_image])
+			player.x, player.y = 0, 0
+			if player.surf == black_disk_image:
+				ai.surf = white_disk_image
+				board.game_started = True						
+			else:
+				ai.surf = black_disk_image
+				board.game_started = True		
+
+# main game function
+def main():
+	
+	while True:
+		for event in pygame.event.get():
+			if event.type == pygame.locals.QUIT:
+				pygame.quit()
+				sys.exit()
+			elif event.type == pygame.locals.MOUSEBUTTONUP:
+				if board.turn == 'player' or board.game_started is False:
+					player.x, player.y = event.pos
+					
+		# game started
+
+		if board.game_started is False:
+			draw_start_board()
+			print('start board drawn')
+		
+		# game not started
+		else:
+			draw_main_board()
+			print('main board drawn')
+
+			if board.turn == 'ai':
+				ai.play_disk()
+				
+			elif board.turn == 'player':		
+				player.play_disk()
+			
+			# set turn here so that ai does not go before main board is drawn
+			if player.surf == black_disk_image:
+				board.turn = 'player'
+			else:
+				board.turn = 'ai'
+			
+			blit_disks()
+			
+		pygame.display.update()
+		fps_clock.tick(60)
+		player.x, player.y = 0, 0
+
+# game started
+
+		if board.game_started is False:
+			draw_start_board()
+			print('start board drawn')
+		
+
+game_font = pygame.font.Font('media/roboto_regular.ttf', 60)
+select_black_font = game_font.render('BLACK', True, BLACK)
+select_white_font = game_font.render('WHITE', True, WHITE)
+select_random_font = game_font.render('RANDOM', True, GRAY)
+ai_turn_font = game_font.render('AI\'S TURN', True, GRAY)
+
+
+'''
+
+	while enemy_disk is True:
+		# check that there are actually is a disk played last
+		if board.last_played_index != None:
+			# check if there is actually a disk above last played
+			if board.last_played_index - 8 > 0:
+				if board.disks[board.last_played_index - 8 * count].disk is True:
+					print('true %i' % i)
+					
+			# check if there is actually a disk to the right of last played
+			elif board.last_played_index + 1 < 63:
+				pass
+			
+			# check if there is actually a disk to the left of last played
+			elif board.last_played_index - 1 > 0:
+				pass
+			
+			# check if there is actually a disk below last played
+			elif board.last_played_index + 8 < 63:
+				pass
+	available_disks = []
+	for i, d in enumerate(board.disks):
+		count = 0
+		if d.disk is True:
+			# check if disk surrounding the disk are actually there
+			# if the disk above's index is greater than 0
+			num = 1
+			enemy_disk = True
+			while enemy_disk is True:
+				# if disk above is actually there and if it is the enemy's
+				if board.disks[d.index - (num) * 8].disk is True and \
+				board.disks[d.index - (num) * 8].surf != player.surf:
+					count += 1
+					
+				# if detected a disk that sandwiches the other color's disk
+				elif board.disks[d.index - (num) * 8].disk is True and \
+				board.disks[d.index - (num) * 8].surf == player.surf:	
+					enemy_disk = False
+			
+				# there is no disk or reached end of board
+				elif board.disks[d.index - (num) * 8].disk is False or \
+				board.disks[d.index - (num) * 8].index < 0:
+					enemy_disk = False
+					count = 0
+			
+			# turns appropriate disks to the right color
+			if enemy_disk is False:
+				for c in range(count):
+					board.disks[i - (c * 8)].surf = player.surf
+					time.sleep(0.2)
+					'''
+
+
+
+for i in [-9, -8, -7, -1, 1 , 7 ,8 ,9]:
+				count = 1
+				enemy_detected = False
+				if board.disks[d.index + i].disk is False and \
+				board.disks[d.index + i].surf != whose_surf and \
+				board.disks[d.index + i].index >= 0 and \
+				board.disks[d.index + i].index <= 63:
+					enemy_detected = True
+				# current diskis on very left of the board so skip 
+				# checking to the left of it
+				if i == -1 and d.index / 8 == 1 or d.index / 8 == 0:
+					continue
+				# current disk is on very right of the board so skip 
+				# checking to the right of it
+				elif i == 1 and d.index / 7 == 1:
+					continue
+				while enemy_detected:
+					# if the surf of index - i of last played disk is 
+					# the enemy's
+					if board.disks[d.index + (i * count)].surf != \
+					whose_surf:
+						count += 1
+					# if the surf of index - i of last played disk is not 
+					# enemy's
+					elif board.disks[d.index + (i * count)].surf == \
+					whose_surf:
+						enemy_detected = False
+					# if the surf of index - i is not on the board
+					elif board.disks[d.index + (i * count)].index \
+					< 0 or board.disks[d.index + (i * count)].index < 63 \
+					or board.disks[d.index + (i * count)].index :
+						count = 0
+						enemy_detected = False
+					for c in range(count):
+						possible_moves.append(board.disks[d.index + (i * c)].index)
+	return possible_moves
+
+'''if board.disks[temp_index + (i * count)].index % 8 == 0 and \
+				board.disks[temp_index + (i * count)].surf != whose_surf:
+					very_left = True
+					continue
+			# could be disk at index 0
+			except ZeroDivisionError and board.disks[temp_index + (i * count)]\
+			.surf != whose_surf:
+				very_left = True
+				continue'''
+
+'''if board.disks[temp_index + (i * count)].index % 7 == 0:
+				continue'''
+
+	continue
+		'''
+		elif board.disks[temp_index + (i * count)].index % 7 == 0: 
+		# prevent from checking and wrapping around boardd
+		if i == -1 or i == -9 or i == 7 or i == 1 or i == -7 or i == 9:
+			if board.disks[temp_index + (i * count)].indexs % '''
+
+elif board.disks[temp_index + (i * count) - 1].index % 7 == 0 and\
+		board.disks[temp_index + (i * count) - 1].surf != whose_surf:
+			continue
+		elif board.disks[temp_index + (i * count) + 1].index % 8 == 0 and\
+		board.disks[temp_index + (i * count) + 1].surf != whose_surf:
+
+elif board.disks[temp_index + (i * count)].index % 7 < \
+			temp_index % 7 and (i == -1 or i == -9 or i == 7 or \
+		    i == 1 or i == -7 or i == 9):
+				enemy_disk = False
+
+
+
+def flip_disks(whose_surf):
+
+	for i in [-9, -8, -7, -1, 1 , 7 ,8 ,9]:
+		enemy_disk = False
+		temp_index = board.last_played_index
+		# check if surrounding disks are there, they are the enemy's, 
+		# and surrounding disks are not off the board
+		if board.disks[temp_index + i].disk and \
+		board.disks[temp_index + i].surf != whose_surf and \
+		board.disks[temp_index + i].index >= 0 and \
+		board.disks[temp_index + i].index <= 63:
+			enemy_disk = True
+
+while enemy_disk:
+			if (i == -1 or i == -9 or i == 7): # checking to the left	
+				if temp_index % 8 == 0: # last played disk is on very left
+					count = 1
+					continue # don't check to left, top left or bottom left
+					
+				# prevents wraparound
+				elif temp_index % 8 < board.disks[temp_index + (i * count)].index \
+				% 8:
+					count = 1
+					continue
+
+			elif (i == 1 or i == -7 or i == 9): # checking to the right
+				if temp_index + 1 % 8 == 0 and temp_index != 63: # last played
+				# disk is on very right
+					count = 1
+					continue # don't check to right, top right or bottom right
+				
+				# prevents wraparound
+				elif temp_index % 8 > board.disks[temp_index + (i * \
+				count)].index % 8:		
+						continue
+				
