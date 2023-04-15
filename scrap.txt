@@ -460,3 +460,18 @@ while enemy_disk:
 				count)].index % 8:		
 						continue
 				
+
+if board.disks[click_index + i].disk and \
+		board.disks[click_index + i].surf != whose_surf and \
+		board.disks[click_index + i].index >= 0 and \
+		board.disks[click_index +].index <= 63:
+
+while checking:
+		# the disk in whatever direction is there and its the enemy's
+		if board.disks[click_index + (i * count)].active and \
+		board.disks[click_index + (i * count)].surf != whose_surf:
+			count += 1
+		elif board.disks[click_index + (i * count)].surf == whose_surf:
+			checking = False
+		elif board.disks[click_index + (i * count)].surf != whose_surf:
+			

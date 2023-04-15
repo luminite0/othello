@@ -196,57 +196,45 @@ def blit_disks():
 def flip_disks(whose_surf):
 	"""flip the right disks after a disk is played
 	whose_surf has to be either player.surf or ai.surf
-	"""
+	"""	
+	checking = False
+	click_index = board.last_played_index
+	if  board.disks[click_index].surf == whose_surf:
+		checking = True
+	# check if surrounding disks are there, they are the enemy's, 
+	# and surrounding disks are not off the board
 	for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-		count = 1
-		enemy_disk = False
-		click_index = board.last_played_index
-		# check if surrounding disks are there, they are the enemy's, 
-		# and surrounding disks are not off the board
-		if board.disks[click_index + i].disk and \
-		board.disks[click_index + i].surf != whose_surf and \
-		board.disks[click_index + i].index >= 0 and \
-		board.disks[click_index + i].index <= 63:
-			enemy_disk = True
-		while enemy_disk:
-			check_index = click_index + (i * count)
-			
-			# checking left or up left and next disk to check wraps around
-			if (i == -1 or i == -9) and (check_index % 8 > (check_index - \
-			(i * count)) % 8):
-				continue
-			
-			# checking down left and nexxt disk to check wraps around
-			elif i == 7 and (check_index % 8 < (check_index - (i * count)) % 8):
-				continue
+		while checking:
+			count = 1
 
-			# checking right or up right and next disk to check wraps around
-			elif (i == 1 or i == -7) and (check_index % 8 < (check_index - \
-			(i * count)) % 8):
+			# checking left, up left or down left and next disk wraps around
+			if (i == -9 or i == -1 or i == 7) and (click_index + (i * count) \
+						% 8 < (click_index + (i * count) - (i * count)) % 8):
+				count = 1
 				continue
 			
-			# checking down right and next disk to check wraps around
-			elif (i == 9) and (check_index % 8 > (check_index - \
-			(i * count)) % 8):
+			# checking right, up right or down right and next wraps around
+			elif (i == 1 or i == -7 or i == 9) and (click_index + (i * count) \
+					   % 8 > (click_index + (i * count) - (i * count)) % 8):
+				count = 1
 				continue
 
 			# if the surf of index - i of last played disk is the enemy's
-			elif board.disks[check_index].surf != whose_surf and \
-			board.disks[check_index].surf != box_image:
+			elif board.disks[click_index + (i * count)].surf != whose_surf and \
+			board.disks[click_index + (i * count)].surf != box_image:
 				count += 1				
-				
+
 			# if the surf of index - i of last played disk is not enemy's
-			elif board.disks[check_index].surf == whose_surf:
-				enemy_disk = False				
-				
+			elif board.disks[click_index + (i * count)].surf == whose_surf:
+				checking = False
+
 			# if the surf of index - i is not on the board
-			elif check_index < 0 or check_index > 63:
+		 	elif click_index + (i * count) < 0 or click_index + (i * count) > 63:
 				count = 1
-				enemy_disk = False
-				
+				checking = False
 		# change the enemy's surfs
-		for c in range(count):
-			board.disks[click_index + (i * c)].surf = whose_surf
+		for c in range(count - 1):
+			board.disks[click_index + (i * (c - 1))].surf = whose_surf
 
 
 def setup_mid_four():
@@ -276,6 +264,7 @@ def setup_mid_four():
 def main():
 	
 	while True:
+		
 		for event in pygame.event.get():
 			if event.type == pygame.locals.QUIT:
 				pygame.quit()
@@ -287,7 +276,6 @@ def main():
 					player.x, player.y = 0, 0
 		
 		draw_main_board()
-		
 		
 		if board.turn == 'ai':
 			#var = possible_moves(player.surf)
@@ -301,7 +289,7 @@ def main():
 			ai.played_disk = False
 			player.play_disk()
 		
-		elif not board.turn:
+		elif not board.turn: # time in between turns to flip disks
 			if player.played_disk:
 				time.sleep(0.3)
 				flip_disks(player.surf)
@@ -312,8 +300,8 @@ def main():
 				board.turn = 'player'
 			player.played_disk = False
 			ai.played_disk = False
-
-		if player.played_disk or ai.played_disk:
+			
+		elif player.played_disk or ai.played_disk:
 			board.turn = None
 			
 		blit_disks()
