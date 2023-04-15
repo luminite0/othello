@@ -1,2 +1,2 @@
 # othello
-Othello (reversi) in python.
+Othello (reversi) in python 3, using pygame.
