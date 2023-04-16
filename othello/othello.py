@@ -56,7 +56,7 @@ class Board(object):
 	def __init__(self):
 		self.disks = []
 		self.turn = None
-		self.last_played_index = None
+		self.last_played_index = 36
 		self.possible_moves = []
 
 
@@ -81,7 +81,7 @@ class Player(object):
 					d.surf = player.surf
 					board.last_played_index = d.index
 					self.played_disk = True
-					
+					print("self.played_disk: %r" % self.played_disk)
 
 
 class AI(object):
@@ -199,42 +199,57 @@ def flip_disks(whose_surf):
 	"""	
 	checking = False
 	click_index = board.last_played_index
-	if  board.disks[click_index].surf == whose_surf:
+	if board.disks[click_index].surf == whose_surf:
 		checking = True
 	# check if surrounding disks are there, they are the enemy's, 
 	# and surrounding disks are not off the board
 	for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+		count = 1
+		
 		while checking:
-			count = 1
-
-			# checking left, up left or down left and next disk wraps around
-			if (i == -9 or i == -1 or i == 7) and (click_index + (i * count) \
-						% 8 < (click_index + (i * count) - (i * count)) % 8):
-				count = 1
-				continue
 			
-			# checking right, up right or down right and next wraps around
-			elif (i == 1 or i == -7 or i == 9) and (click_index + (i * count) \
-					   % 8 > (click_index + (i * count) - (i * count)) % 8):
-				count = 1
-				continue
+			if (click_index + (i * count)) % 8 == 0:
+				# checking left, up left or down left and next disk wraps around
+				if (i == -9 or i == -1 or i == 7) and (click_index + (i * count) \
+				% 8 < (click_index + (i * (count + 1))) % 8):
+					count = 1
+					print('left side wraparound, continuing')
+					checking = False
+				# checking right, up right or down right and next wraps around
+				elif (i == 1 or i == -7 or i == 9) and (click_index + (i * count) \
+				% 8 > (click_index + (i * (count + 1))) % 8):
+					count = 1
+					print('right side wraparound, continuing')
+					checking = False
+
 
 			# if the surf of index - i of last played disk is the enemy's
-			elif board.disks[click_index + (i * count)].surf != whose_surf and \
+			if board.disks[click_index + (i * count)].surf != whose_surf and \
 			board.disks[click_index + (i * count)].surf != box_image:
-				count += 1				
-
+				count += 1
+				print('enemy box detected on %i, going %i' % ((click_index + (i * count)), i))
 			# if the surf of index - i of last played disk is not enemy's
 			elif board.disks[click_index + (i * count)].surf == whose_surf:
-				checking = False
-
-			# if the surf of index - i is not on the board
-		 	elif click_index + (i * count) < 0 or click_index + (i * count) > 63:
+				checking = False		
+				print('ally box detected on %i, going %i' % ((click_index + (i * count)), i))
+			elif board.disks[click_index + (i * count)].surf == box_image:
 				count = 1
 				checking = False
+				print('empty box detected on %i, going %i' % ((click_index + (i * count)), i))
+			# if the surf of index - i is not on the board
+			elif click_index + (i * count) < 0 or click_index + (i * count) > 63:
+				count = 1
+				checking = False
+				print('%i is off the board' % (click_index + (i * count)))
+				
+		##
+		####### make sure that count var is actually working
+		##
+
 		# change the enemy's surfs
 		for c in range(count - 1):
 			board.disks[click_index + (i * (c - 1))].surf = whose_surf
+			print(c, i)
 
 
 def setup_mid_four():
@@ -301,7 +316,8 @@ def main():
 			player.played_disk = False
 			ai.played_disk = False
 			
-		elif player.played_disk or ai.played_disk:
+		# set the intermediate stage to flip the disks	
+		if player.played_disk is True or ai.played_disk is True:
 			board.turn = None
 			
 		blit_disks()
