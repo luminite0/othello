@@ -475,3 +475,35 @@ while checking:
 			checking = False
 		elif board.disks[click_index + (i * count)].surf != whose_surf:
 			
+
+if (click_index + (i * count)) < 0 or (click_index + (i * count)) > 63:
+				count = 0
+				checking = False
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
+				
+			elif board.disks[click_index + (i * count)].surf == box_image:
+				count = 0
+				checking = False
+				print('empty box detected on %i, going %i' % ((click_index + (i * count)), i))	
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
+
+#print('%i is off the board' % (click_index + (i * count)))
+			# on very left of board and checking left, 
+			# up left or down left and next disk wraps around
+			if (click_index + (i * count)) - 1 % 8 == 0 and (i == -9 or i == -1 or \
+			i == 7) and (click_index + (i * count) % 8 > (click_index + (i * \
+			(count - 1))) % 8):
+				count = 1
+				print('left side wraparound, continuing')
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
+				checking = False
+
+# on very right of board and checking right, 
+			# up right or down right and next wraps around
+			elif (click_index + (i * count)) % 8 == 0 and (i == 1 or \
+			i == -7 or i == 9) and (click_index + (i * count) % 8 < \
+			(click_index + (i * (count - 1))) % 8):
+				count = 1
+				#print('right side wraparound, continuing')				
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
+				checking = False

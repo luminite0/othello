@@ -197,59 +197,53 @@ def flip_disks(whose_surf):
 	"""flip the right disks after a disk is played
 	whose_surf has to be either player.surf or ai.surf
 	"""	
-	checking = False
-	click_index = board.last_played_index
-	if board.disks[click_index].surf == whose_surf:
-		checking = True
+	click_index = board.last_played_index	
 	# check if surrounding disks are there, they are the enemy's, 
 	# and surrounding disks are not off the board
 	for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-		count = 1
-		
+		count = 0
+		checking = True
 		while checking:
-			
-			if (click_index + (i * count)) % 8 == 0:
-				# checking left, up left or down left and next disk wraps around
-				if (i == -9 or i == -1 or i == 7) and (click_index + (i * count) \
-				% 8 < (click_index + (i * (count + 1))) % 8):
-					count = 1
-					print('left side wraparound, continuing')
-					checking = False
-				# checking right, up right or down right and next wraps around
-				elif (i == 1 or i == -7 or i == 9) and (click_index + (i * count) \
-				% 8 > (click_index + (i * (count + 1))) % 8):
-					count = 1
-					print('right side wraparound, continuing')
-					checking = False
+			# if the surf of index - i is not on the board
+			if (click_index + i) < 0 or (click_index + i) > 63:
+				count = 0
+				checking = False
+			# if reached empty box
+			elif board.disks[click_index + i].surf == box_image:
+				count = 0
+				checking = False
 
-
+			# if on very right and wrapped around from left
+			if (click_index + i) - 1 % 8 == 0 and (i == -9 or i == -1 \
+			or i == 7) and ((click_index + i) % 8) > ((click_index + i) - 1 % 8):
+				count = 0
+				checking = False
+			# if on very left and wrapped around from right
+			elif (click_index + i) % 8 == 0 and (i == -9 or i == -1 \
+			or i == 7) and ((click_index + i) % 8) < ((click_index + i) - 1 % 8):
+				count = 0
+				checking = False
+		
 			# if the surf of index - i of last played disk is the enemy's
-			if board.disks[click_index + (i * count)].surf != whose_surf and \
-			board.disks[click_index + (i * count)].surf != box_image:
+			if board.disks[click_index + i].surf != whose_surf and \
+			board.disks[click_index + i].surf != box_image:
 				count += 1
 				print('enemy box detected on %i, going %i' % ((click_index + (i * count)), i))
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
 			# if the surf of index - i of last played disk is not enemy's
-			elif board.disks[click_index + (i * count)].surf == whose_surf:
-				checking = False		
-				print('ally box detected on %i, going %i' % ((click_index + (i * count)), i))
-			elif board.disks[click_index + (i * count)].surf == box_image:
-				count = 1
+			elif board.disks[click_index + i].surf == whose_surf:
 				checking = False
-				print('empty box detected on %i, going %i' % ((click_index + (i * count)), i))
-			# if the surf of index - i is not on the board
-			elif click_index + (i * count) < 0 or click_index + (i * count) > 63:
-				count = 1
-				checking = False
-				print('%i is off the board' % (click_index + (i * count)))
+				print('ally box detected on %i, going %i' % ((click_index + (i * count)), i))				
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
 				
-		##
-		####### make sure that count var is actually working
-		##
+			i += i
 
 		# change the enemy's surfs
 		for c in range(count - 1):
-			board.disks[click_index + (i * (c - 1))].surf = whose_surf
-			print(c, i)
+			board.disks[click_index + (i * c)].surf = whose_surf
+			#print('click index + (i * c) is %i' % (click_index + (i * c)))
+			#print('c is %i i is %i\n' % (c, i))
+		
 
 
 def setup_mid_four():
