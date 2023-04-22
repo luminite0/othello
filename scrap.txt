@@ -507,3 +507,36 @@ if (click_index + (i * count)) < 0 or (click_index + (i * count)) > 63:
 				#print('right side wraparound, continuing')				
 				print('count is %r, checking is %r, i is %r' % (count, checking, i))
 				checking = False
+
+
+# if reached empty box
+			elif board.disks[click_index + i].surf == box_image:
+				count = 0
+				checking = False
+
+
+# if on very right and wrapped around from left
+			if (click_index + i) - 1 % 8 == 0 and (i == -9 or i == -1 \
+			or i == 7) and ((click_index + i) % 8) > ((click_index + i) - 1 % 8):
+				count = 0
+				checking = False
+			# if on very left and wrapped around from right
+			elif (click_index + i) % 8 == 0 and (i == -9 or i == -1 \
+			or i == 7) and ((click_index + i) % 8) < ((click_index + i) - 1 % 8):
+				count = 0
+				checking = False
+
+
+# if the surf of index - i of last played disk is the enemy's
+			if board.disks[click_index + i].surf != whose_surf and \
+			board.disks[click_index + i].surf != box_image:
+				count += 1
+				print('enemy box detected on %i, going %i' % ((click_index + (i * count)), i))
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
+			# if the surf of index - i of last played disk is not enemy's
+			elif board.disks[click_index + i].surf == whose_surf:
+				checking = False
+				print('ally box detected on %i, going %i' % ((click_index + (i * count)), i))				
+				print('count is %r, checking is %r, i is %r' % (count, checking, i))
+				
+			i += i			

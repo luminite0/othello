@@ -48,8 +48,9 @@ class Disk(object):
 		self.disk = disk
 		self.color = None
 		self.index = 0
-		
 
+	
+		
 class Board(object):
 	"""class for the game turn and disks
 	"""
@@ -58,7 +59,99 @@ class Board(object):
 		self.turn = None
 		self.last_played_index = 36
 		self.possible_moves = []
+				
+	def draw_main_board(self):
+		"""draws background color frame for boxes and disks""" 
+		main_surface.fill(GREEN)
+		pygame.draw.rect(main_surface, BLACK, pygame.Rect(BOARD_TOP_X, \
+						 BOARD_TOP_Y, BOARD_WIDTH-2, BOARD_HEIGHT-2), \
+						 int(LINE_WIDTH/2))
+	
+	def setup_mid_four(self):
+		"""setup the middle four disks
+		"""
+		if random.randint(0, 1) == 1:
+			board.disks[27].surf = black_disk_image
+			board.disks[28].surf = white_disk_image
+			board.disks[35].surf = white_disk_image
+			board.disks[36].surf = black_disk_image
+		else:
+			board.disks[27].surf = white_disk_image
+			board.disks[28].surf = black_disk_image
+			board.disks[35].surf = black_disk_image
+			board.disks[36].surf = white_disk_image
+		# make the tiles active so they actually blit (see loop below)
+		board.disks[27].disk = True
+		board.disks[28].disk = True
+		board.disks[35].disk = True
+		board.disks[36].disk = True
+		
+	def create_disks(self):
+		"""create 64 disks and store them in self.disks
+		"""
+		box_row = 0
+		box_column = 0
+		# create disks, for now each disk is invisible
+		for i in range(NUM_BOXES):
+			# set top left x and top left y coords of each disk
+			temp_x = int(WINDOW_BOARD_GAP + (LINE_WIDTH / 2) \
+						 + (44 * box_column))			
+			temp_y = int(WINDOW_BOARD_GAP + (LINE_WIDTH / 2) \
+						 + (44 * box_row))			
+			disk = Disk(temp_x, temp_y, box_image, box_image.get_rect( \
+						topleft=(temp_x, temp_y)))
+			disk.index = i
+			board.disks.append(disk)
+			box_column += 1
+			# if reached end of row (reached last column)
+			if box_column / 8 == 1:
+				box_column = 0
+				box_row += 1
+		
+	def blit_disks(self):
+		"""checks if disks are active and blits active ones to the screen
+		"""
+		for d in board.disks:			
+			main_surface.blit(d.surf, (d.x, d.y))
+			
+	def determine_up(self, disk_num):
+		"""Determines if a disk is directly above another disk"""
+		count = 1
+		for i in range(8):
+			while disk_num + (count * -8) > 0:
+				if determine_no_wrap():			
+					if board.disks[disk_num + (i * -8)].surf != board.disks[disk_num].surf:
+						count += 1				
+		pass
 
+	def determine_down(self):
+		"""Determines if a disk is directly below another disk"""
+		pass
+	
+	def determine_left(self):
+		"""Determines if a disk is directly left of another disk"""
+		pass
+	
+	def determine_right(self):
+		"""Determines if a disk is directly right of another disk"""
+		pass
+
+	def determine_up_left(self):
+		"""Determines if a disk is disk up left of another disk"""
+		pass
+		
+	def determine_up_right(self):
+		"""Determines if a disk is disk up right of another disk"""
+		pass
+	
+	def determine_down_left(self):
+		"""Determines if a disk is disk down left of another disk"""
+		pass
+	
+	def determine_down_right(self):
+		"""Determines if a disk is disk up left of another disk"""
+		pass
+		
 
 class Player(object):
 	"""class for player's information
@@ -109,45 +202,6 @@ class AI(object):
 		board.last_played_index = num
 		
 
-# functions
-def create_disks():
-	"""create 64 disks and store them in self.disks
-	"""
-	box_row = 0
-	box_column = 0
-	# create disks, for now each disk is invisible
-	for i in range(NUM_BOXES):
-		# set top left x and top left y coords of each disk
-		temp_x = int(WINDOW_BOARD_GAP + (LINE_WIDTH / 2) \
-					 + (44 * box_column))			
-		temp_y = int(WINDOW_BOARD_GAP + (LINE_WIDTH / 2) \
-					 + (44 * box_row))			
-		disk = Disk(temp_x, temp_y, box_image, box_image.get_rect( \
-					topleft=(temp_x, temp_y)))
-		disk.index = i
-		board.disks.append(disk)
-		box_column += 1
-		# if reached end of row (reached last column)
-		if box_column / 8 == 1:
-			box_column = 0
-			box_row += 1
-			
-
-def draw_main_board():
-	"""draws background color frame for boxes and disks
-	""" 
-	main_surface.fill(GREEN)
-	pygame.draw.rect(main_surface, BLACK, pygame.Rect(BOARD_TOP_X, \
-					 BOARD_TOP_Y, BOARD_WIDTH-2, BOARD_HEIGHT-2), \
-					 int(LINE_WIDTH/2))
-	
-
-def blit_disks():
-	"""checks if disks are active and blits active ones to the screen
-	"""
-	for d in board.disks:			
-		main_surface.blit(d.surf, (d.x, d.y))
-		
 
 '''def possible_moves(whose_surf):
 	for d in board.disks:
@@ -202,68 +256,36 @@ def flip_disks(whose_surf):
 	# and surrounding disks are not off the board
 	for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
 		count = 0
-		checking = True
-		while checking:
-			# if the surf of index - i is not on the board
-			if (click_index + i) < 0 or (click_index + i) > 63:
-				count = 0
-				checking = False
-			# if reached empty box
-			elif board.disks[click_index + i].surf == box_image:
-				count = 0
-				checking = False
-
-			# if on very right and wrapped around from left
-			if (click_index + i) - 1 % 8 == 0 and (i == -9 or i == -1 \
-			or i == 7) and ((click_index + i) % 8) > ((click_index + i) - 1 % 8):
-				count = 0
-				checking = False
-			# if on very left and wrapped around from right
-			elif (click_index + i) % 8 == 0 and (i == -9 or i == -1 \
-			or i == 7) and ((click_index + i) % 8) < ((click_index + i) - 1 % 8):
-				count = 0
-				checking = False
 		
-			# if the surf of index - i of last played disk is the enemy's
-			if board.disks[click_index + i].surf != whose_surf and \
-			board.disks[click_index + i].surf != box_image:
+		while board.disks[click_index + (i * (count + 1))].surf != box_image:
+			# if index + (i * count) is not on the board
+			if (click_index + (i * count)) < 0 or (click_index + (i * count)) > 63:
+				count = 0
+				break
+			
+			elif ((click_index + (i * (count + 1))) % 8 == 0) and \
+			(i == -9 or i == -1 or i == 7):
+					if (click_index + (i * (count + 1))) > (click_index + (i * count)):
+						count = 0
+						break
+					
+			elif ((click_index + (i * count)) + 1 % 8 == 0) and \
+			(i == -7 or i == 1 or i == 9):
+				if (click_index + (i * (count + 1)) % 8) < (click_index + (i * count) % 8):
+					count = 0
+					break
+			
+			elif board.disks[click_index + (i * (count + 1))].surf != whose_surf:
 				count += 1
-				print('enemy box detected on %i, going %i' % ((click_index + (i * count)), i))
-				print('count is %r, checking is %r, i is %r' % (count, checking, i))
-			# if the surf of index - i of last played disk is not enemy's
-			elif board.disks[click_index + i].surf == whose_surf:
-				checking = False
-				print('ally box detected on %i, going %i' % ((click_index + (i * count)), i))				
-				print('count is %r, checking is %r, i is %r' % (count, checking, i))
-				
-			i += i
+			elif board.disks[click_index + (i * (count + 1))].surf == whose_surf:
+				# change the enemy's surfs
+				for c in range(count):
+					board.disks[click_index + (i * c)].surf = whose_surf					
+				break
 
-		# change the enemy's surfs
-		for c in range(count - 1):
-			board.disks[click_index + (i * c)].surf = whose_surf
-			#print('click index + (i * c) is %i' % (click_index + (i * c)))
-			#print('c is %i i is %i\n' % (c, i))
+		
 		
 
-
-def setup_mid_four():
-	"""setup the middle four disks
-	"""
-	if random.randint(0, 1) == 1:
-		board.disks[27].surf = black_disk_image
-		board.disks[28].surf = white_disk_image
-		board.disks[35].surf = white_disk_image
-		board.disks[36].surf = black_disk_image
-	else:
-		board.disks[27].surf = white_disk_image
-		board.disks[28].surf = black_disk_image
-		board.disks[35].surf = black_disk_image
-		board.disks[36].surf = white_disk_image
-	# make the tiles active so they actually blit (see loop below)
-	board.disks[27].disk = True
-	board.disks[28].disk = True
-	board.disks[35].disk = True
-	board.disks[36].disk = True
 	
 
 
@@ -284,7 +306,7 @@ def main():
 				else:
 					player.x, player.y = 0, 0
 		
-		draw_main_board()
+		board.draw_main_board()
 		
 		if board.turn == 'ai':
 			#var = possible_moves(player.surf)
@@ -329,6 +351,6 @@ if __name__ == '__main__':
 	ai.surf = white_disk_image
 	board = Board()
 	board.turn = 'player'
-	create_disks()
-	setup_mid_four()
+	board.create_disks()
+	board.setup_mid_four()
 	main()
