@@ -60,11 +60,11 @@ class Board(object):
 		self.last_played_index = 36
 		self.possible_moves = []
 				
-	def draw_main_board(self):
+	def draw_board(self):
 		"""draws background color frame for boxes and disks""" 
 		main_surface.fill(GREEN)
 		pygame.draw.rect(main_surface, BLACK, pygame.Rect(BOARD_TOP_X, \
-						 BOARD_TOP_Y, BOARD_WIDTH-2, BOARD_HEIGHT-2), \
+						 BOARD_TOP_Y, BOARD_WIDTH, BOARD_HEIGHT), \
 						 int(LINE_WIDTH/2))
 	
 	def setup_mid_four(self):
@@ -114,43 +114,38 @@ class Board(object):
 		for d in board.disks:			
 			main_surface.blit(d.surf, (d.x, d.y))
 			
-	def determine_up(self, disk_num):
-		"""Determines if a disk is directly above another disk"""
+	
+	def determine_near(self, disk, whose_surf, direction):
+		"""Determines if a disk is in direction"""
+		checking = True
 		count = 1
-		for i in range(8):
-			while disk_num + (count * -8) > 0:
-				if determine_no_wrap():			
-					if board.disks[disk_num + (i * -8)].surf != board.disks[disk_num].surf:
-						count += 1				
-		pass
+		disks_available = []
+		while checking:
+			if disk + (count * direction) < 0 or disk + (count * direction) > 63:
+				count = 1
+				checking = False			
+			elif board.disks[disk + (count * direction)].surf == whose_surf:
+				checking = False
+			elif board.disks[disk + (count * direction)].surf == box_image:
+				count = 1
+				checking = False
+			elif board.disks[disk + (count * direction)].surf != whose_surf:
+				count += 1
+				if direction == -1 or direction == -9 or direction == 7:
+					if (disk + (count * direction)) % 8 > (disk + (count * direction) - 1) % 8:
+						count = 1
+						checking = False
+				elif direction == 1 or direction == 9 or direction == -7:
+					if (disk + (count * direction)) % 8 < (disk + (count * direction) - 1) % 8:
+						count = 1
+						checking = False				
 
-	def determine_down(self):
-		"""Determines if a disk is directly below another disk"""
-		pass
-	
-	def determine_left(self):
-		"""Determines if a disk is directly left of another disk"""
-		pass
-	
-	def determine_right(self):
-		"""Determines if a disk is directly right of another disk"""
-		pass
-
-	def determine_up_left(self):
-		"""Determines if a disk is disk up left of another disk"""
-		pass
-		
-	def determine_up_right(self):
-		"""Determines if a disk is disk up right of another disk"""
-		pass
-	
-	def determine_down_left(self):
-		"""Determines if a disk is disk down left of another disk"""
-		pass
-	
-	def determine_down_right(self):
-		"""Determines if a disk is disk up left of another disk"""
-		pass
+		for c in range(count):
+			# c - 1 so if  count is reset no other disks will be included
+			disks_available.append(disk + (c * direction))
+		disks_available.remove(disk)
+		print(disks_available)
+		return disks_available
 		
 
 class Player(object):
@@ -202,95 +197,6 @@ class AI(object):
 		board.last_played_index = num
 		
 
-
-'''def possible_moves(whose_surf):
-	for d in board.disks:
-		if d.disk:
-			for i in [-9, -8, -7, -1, 1 , 7 ,8 ,9]:
-				enemy_disk = False
-				count = 1
-				# check if surrounding disks are there, they are the enemy's, 
-				# and surrounding disks are not off the board
-				if board.disks[d.index + i].disk and \
-				board.disks[d.index + i].surf != whose_surf and \
-				board.disks[d.index + i].index >= 0 and \
-				board.disks[d.index + i].index <= 63:
-					enemy_disk = True
-				# disk last played is on the very left of the board so skip 
-				# checking to the left of it
-				if i == -1 and d.index / 8 == 1 or d.index / 8 == 0:
-					continue
-				# disk last played is on the very right of the board so skip 
-				# checking to the right of it
-				elif i == 1 and d.index / 7 == 1:
-					continue
-				while enemy_disk:
-					# if the surf of index - i of last played disk is the enemy's
-					if board.disks[d.index + (i * count)].surf != \
-					whose_surf:
-						count += 1
-
-					# if the surf of index - i of last played disk is not enemy's
-					elif board.disks[d.index + (i * count)].surf == \
-					whose_surf:
-						enemy_disk = False
-					# if the surf of index - i is not on the board
-					elif board.disks[d.index + (i * count)].index \
-					< 0 or board.disks[d.index + (i * count)].index < 63 \
-					or board.disks[d.index + (i * count)].index :
-						count = 0
-						enemy_disk = False
-	return board.possible_moves
-				# change the enemy's surfs
-				for c in range(count):
-					board.disks[d.index + (i * c)].surf = whose_surf
-					'''
-					
-
-def flip_disks(whose_surf):
-	"""flip the right disks after a disk is played
-	whose_surf has to be either player.surf or ai.surf
-	"""	
-	click_index = board.last_played_index	
-	# check if surrounding disks are there, they are the enemy's, 
-	# and surrounding disks are not off the board
-	for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-		count = 0
-		
-		while board.disks[click_index + (i * (count + 1))].surf != box_image:
-			# if index + (i * count) is not on the board
-			if (click_index + (i * count)) < 0 or (click_index + (i * count)) > 63:
-				count = 0
-				break
-			
-			elif ((click_index + (i * (count + 1))) % 8 == 0) and \
-			(i == -9 or i == -1 or i == 7):
-					if (click_index + (i * (count + 1))) > (click_index + (i * count)):
-						count = 0
-						break
-					
-			elif ((click_index + (i * count)) + 1 % 8 == 0) and \
-			(i == -7 or i == 1 or i == 9):
-				if (click_index + (i * (count + 1)) % 8) < (click_index + (i * count) % 8):
-					count = 0
-					break
-			
-			elif board.disks[click_index + (i * (count + 1))].surf != whose_surf:
-				count += 1
-			elif board.disks[click_index + (i * (count + 1))].surf == whose_surf:
-				# change the enemy's surfs
-				for c in range(count):
-					board.disks[click_index + (i * c)].surf = whose_surf					
-				break
-
-		
-		
-
-	
-
-
-
-
 # main game function
 def main():
 	
@@ -306,7 +212,7 @@ def main():
 				else:
 					player.x, player.y = 0, 0
 		
-		board.draw_main_board()
+		board.draw_board()
 		
 		if board.turn == 'ai':
 			#var = possible_moves(player.surf)
@@ -321,7 +227,11 @@ def main():
 			player.play_disk()
 		
 		elif not board.turn: # time in between turns to flip disks
-			if player.played_disk:
+			for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+				player.played_disk = False
+				board.determine_near(board.last_played_index, player.surf, i)
+				board.turn = 'player'
+			'''if player.played_disk:
 				time.sleep(0.3)
 				flip_disks(player.surf)
 				board.turn = 'ai'
@@ -330,17 +240,16 @@ def main():
 				flip_disks(ai.surf)
 				board.turn = 'player'
 			player.played_disk = False
-			ai.played_disk = False
+			ai.played_disk = False'''
 			
 		# set the intermediate stage to flip the disks	
 		if player.played_disk is True or ai.played_disk is True:
 			board.turn = None
-			
-		blit_disks()
+		
+		board.blit_disks()
 		pygame.display.update()
 		fps_clock.tick(60)
 		player.x, player.y = 0, 0
-
 
 
 
