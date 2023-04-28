@@ -839,3 +839,16 @@ if (click_index + (i * count)) < 0 or (click_index + (i * count)) > 63:
 	
 
 
+
+
+			'''if player.played_disk:
+				time.sleep(0.3)
+				flip_disks(player.surf)
+				board.turn = 'ai'
+			elif ai.played_disk:
+				time.sleep(0.3)
+				flip_disks(ai.surf)
+				board.turn = 'player'
+			player.played_disk = False
+			ai.played_disk = False'''
+		

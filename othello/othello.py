@@ -33,8 +33,6 @@ black_disk_image = pygame.image.load('media/black_disk.png')
 white_disk_image = pygame.image.load('media/white_disk.png')
 
 
-
-
 # classes 
 class Disk(object):
 	"""class for the disks. for now each disk is invisible
@@ -49,7 +47,6 @@ class Disk(object):
 		self.color = None
 		self.index = 0
 
-	
 		
 class Board(object):
 	"""class for the game turn and disks
@@ -59,12 +56,13 @@ class Board(object):
 		self.turn = None
 		self.last_played_index = 36
 		self.possible_moves = []
+		self.turns_paused = False
 				
 	def draw_board(self):
 		"""draws background color frame for boxes and disks""" 
 		main_surface.fill(GREEN)
 		pygame.draw.rect(main_surface, BLACK, pygame.Rect(BOARD_TOP_X, \
-						 BOARD_TOP_Y, BOARD_WIDTH, BOARD_HEIGHT), \
+						 BOARD_TOP_Y, BOARD_WIDTH - 1, BOARD_HEIGHT - 1), \
 						 int(LINE_WIDTH/2))
 	
 	def setup_mid_four(self):
@@ -109,11 +107,25 @@ class Board(object):
 				box_row += 1
 		
 	def blit_disks(self):
-		"""checks if disks are active and blits active ones to the screen
-		"""
 		for d in board.disks:			
 			main_surface.blit(d.surf, (d.x, d.y))
-			
+
+	def flip_disks(self):
+		"""checks if disks are active and blits active ones to the screen
+		"""
+		disks_to_flip = []
+		for i in [-9, -8, -8, -1, 1, 7, 8, 9]:
+			if board.turn == 'player':
+				disks_to_flip.extend(board.determine_near(\
+					board.last_played_index, player.surf, i))
+			else:
+				disks_to_flip.extend(board.determine_near(\
+					board.last_played_index, ai.surf, i))
+		for d in disks_to_flip:			
+			if board.turn == 'player':
+				board.disks[d].surf = player.surf
+			else:
+				board.disks[d].surf = ai.surf				
 	
 	def determine_near(self, disk, whose_surf, direction):
 		"""Determines if a disk is in direction"""
@@ -144,7 +156,6 @@ class Board(object):
 			# c - 1 so if  count is reset no other disks will be included
 			disks_available.append(disk + (c * direction))
 		disks_available.remove(disk)
-		print(disks_available)
 		return disks_available
 		
 
@@ -154,23 +165,28 @@ class Player(object):
 	def __init__(self):
 		self.x = 0
 		self.y = 0
-		self.surf = None
-		self.played_disk = False
-		
-		
+		self.surf = None		
 
 	def play_disk(self):
 		"""activates box clicked if it's the player's turn
 		"""
+		self.possible_moves = []
+		'''for i in range(NUM_BOXES):
+			for j in [-9, -8, -7, -1, 1, 7, 8, 9]:
+				self.possible_moves.extend(board.determine_near(i, player.surf, j))
+		print(self.possible_moves)'''
 		for d in board.disks:
 			if d.rect.collidepoint((player.x, player.y)) and not d.disk:
-					# makes the disk visible
-					d.disk = True
-					d.surf = player.surf
-					board.last_played_index = d.index
-					self.played_disk = True
-					print("self.played_disk: %r" % self.played_disk)
-
+					for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+						self.possible_moves.extend(board.determine_near(d.index, \
+						      player.surf, i))
+					if d.index in self.possible_moves:
+						# makes the disk visible
+						d.disk = True
+						d.surf = player.surf
+						board.last_played_index = d.index
+						board.turns_paused = True
+			
 
 class AI(object):
 	"""class for the ai's information
@@ -178,13 +194,15 @@ class AI(object):
 	def __init__(self):			
 		#self.color = None
 		self.surf = None
-		self.played_disk = False
 	
 
 	def determine_best(self):
 		"""returns the index of the best avaiable disk to flip
 		"""
-		pass
+		possible_moves = []
+		for i in range(NUM_BOXES):
+			
+			pass
 	
 
 	def play_disk(self):
@@ -193,8 +211,8 @@ class AI(object):
 		num = random.randint(0, 22)
 		board.disks[num].disk = True
 		board.disks[num].surf = self.surf
-		self.played_disk = True
 		board.last_played_index = num
+		board.turns_paused = True
 		
 
 # main game function
@@ -213,45 +231,33 @@ def main():
 					player.x, player.y = 0, 0
 		
 		board.draw_board()
-		
-		if board.turn == 'ai':
-			#var = possible_moves(player.surf)
-			#print(var)
-			player.played_disk = False
-			time.sleep(random.randint(2, 5) * 0.5)
-			ai.play_disk()
-			print('test %i' % random.randint(0, 100))
-			
-		elif board.turn == 'player':
-			ai.played_disk = False
-			player.play_disk()
-		
-		elif not board.turn: # time in between turns to flip disks
-			for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-				player.played_disk = False
-				board.determine_near(board.last_played_index, player.surf, i)
-				board.turn = 'player'
-			'''if player.played_disk:
-				time.sleep(0.3)
-				flip_disks(player.surf)
-				board.turn = 'ai'
-			elif ai.played_disk:
-				time.sleep(0.3)
-				flip_disks(ai.surf)
-				board.turn = 'player'
-			player.played_disk = False
-			ai.played_disk = False'''
-			
-		# set the intermediate stage to flip the disks	
-		if player.played_disk is True or ai.played_disk is True:
-			board.turn = None
-		
-		board.blit_disks()
-		pygame.display.update()
-		fps_clock.tick(60)
-		player.x, player.y = 0, 0
 
+		if not board.turns_paused:			
+			if board.turn == 'ai':					
+				ai.play_disk()	
 
+			elif board.turn == 'player':				
+				player.play_disk()
+
+			player.x, player.y = 0, 0
+			board.blit_disks()
+			pygame.display.update()
+			fps_clock.tick(60)			
+
+		else:
+			time.sleep(0.2)
+			if board.turn == 'player':
+				board.turn == 'ai'
+			else:
+				board.turn == 'player'
+
+			player.x, player.y = 0, 0
+			board.turns_paused = False
+			board.flip_disks()
+			board.blit_disks()
+			pygame.display.update()
+			fps_clock.tick(60)
+			
 
 if __name__ == '__main__':
 	player = Player()
