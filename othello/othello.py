@@ -130,7 +130,7 @@ class Board(object):
 	def determine_near(self, disk, whose_surf, direction):
 		"""Determines if a disk is in direction"""
 		checking = True
-		count = 1
+		count = 1 
 		disks_available = []
 		while checking:
 			if disk + (count * direction) < 0 or disk + (count * direction) > 63:
@@ -156,6 +156,7 @@ class Board(object):
 			# c - 1 so if  count is reset no other disks will be included
 			disks_available.append(disk + (c * direction))
 		disks_available.remove(disk)
+		print(disks_available)
 		return disks_available
 		
 
@@ -169,18 +170,15 @@ class Player(object):
 
 	def play_disk(self):
 		"""activates box clicked if it's the player's turn
-		"""
-		self.possible_moves = []
+		"""		
 		'''for i in range(NUM_BOXES):
 			for j in [-9, -8, -7, -1, 1, 7, 8, 9]:
 				self.possible_moves.extend(board.determine_near(i, player.surf, j))
 		print(self.possible_moves)'''
 		for d in board.disks:
 			if d.rect.collidepoint((player.x, player.y)) and not d.disk:
-					for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-						self.possible_moves.extend(board.determine_near(d.index, \
-						      player.surf, i))
-					if d.index in self.possible_moves:
+				for i in [-9, -8, -8, -1, 1, 7, 8, 9]:
+					if board.determine_near(d.index, player.surf, i) != [[],[],[],[],[],[],[],[]]:											
 						# makes the disk visible
 						d.disk = True
 						d.surf = player.surf
