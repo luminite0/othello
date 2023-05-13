@@ -114,7 +114,7 @@ class Board(object):
 		"""checks if disks are active and blits active ones to the screen
 		"""
 		disks_to_flip = []
-		for i in [-9, -8, -8, -1, 1, 7, 8, 9]:
+		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
 			if board.turn == 'player':
 				disks_to_flip.extend(board.determine_near(\
 					board.last_played_index, player.surf, i))
@@ -130,33 +130,40 @@ class Board(object):
 	def determine_near(self, disk, whose_surf, direction):
 		"""Determines if a disk is in direction"""
 		checking = True
-		count = 1 
+		count = 1
 		disks_available = []
 		while checking:
-			if disk + (count * direction) < 0 or disk + (count * direction) > 63:
+			check_disk = disk + (count * direction)
+			#print('check disk %i, count %i' % (check_disk, count))
+			
+			# check disk is not on the board
+			if check_disk < 0 or check_disk > 63:
 				count = 1
-				checking = False			
-			elif board.disks[disk + (count * direction)].surf == whose_surf:
 				checking = False
-			elif board.disks[disk + (count * direction)].surf == box_image:
+			elif board.disks[check_disk].surf == box_image:
 				count = 1
 				checking = False
-			elif board.disks[disk + (count * direction)].surf != whose_surf:
+			# check disk is the enemy's
+			elif board.disks[check_disk].surf != whose_surf:
 				count += 1
-				if direction == -1 or direction == -9 or direction == 7:
-					if (disk + (count * direction)) % 8 > (disk + (count * direction) - 1) % 8:
-						count = 1
-						checking = False
-				elif direction == 1 or direction == 9 or direction == -7:
-					if (disk + (count * direction)) % 8 < (disk + (count * direction) - 1) % 8:
-						count = 1
-						checking = False				
+			# check disk is not the enemy's
+			elif board.disks[check_disk].surf == whose_surf:
+				checking = False
+			# going left and wrapped around
+			elif (direction == -9 or direction == -1 or direction == 7) and \
+			(check_disk > check_disk - 1):
+				count = 1
+				checking = False
+			# going right and wrapped around
+			elif (direction == -7 or direction == 1 or direction == 9) and \
+			(check_disk < check_disk - 1):
+				count = 1
+				checking = False
 
-		for c in range(count):
-			# c - 1 so if  count is reset no other disks will be included
-			disks_available.append(disk + (c * direction))
-		disks_available.remove(disk)
-		print(disks_available)
+		# add count disks from direction to avaiable_disks
+		if count != 1:
+			for c in range(count):
+				disks_available.append(disk + ((c * direction)))				
 		return disks_available
 		
 
@@ -171,19 +178,16 @@ class Player(object):
 	def play_disk(self):
 		"""activates box clicked if it's the player's turn
 		"""		
-		'''for i in range(NUM_BOXES):
-			for j in [-9, -8, -7, -1, 1, 7, 8, 9]:
-				self.possible_moves.extend(board.determine_near(i, player.surf, j))
-		print(self.possible_moves)'''
 		for d in board.disks:
-			if d.rect.collidepoint((player.x, player.y)) and not d.disk:
-				for i in [-9, -8, -8, -1, 1, 7, 8, 9]:
-					if board.determine_near(d.index, player.surf, i) != [[],[],[],[],[],[],[],[]]:											
+			if d.rect.collidepoint((player.x, player.y)) and not d.disk:				
+				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+					temp = board.determine_near(d.index, player.surf, i)					
+					if temp != []:
 						# makes the disk visible
 						d.disk = True
 						d.surf = player.surf
 						board.last_played_index = d.index
-						board.turns_paused = True
+						board.turns_paused = True										
 			
 
 class AI(object):
@@ -206,6 +210,7 @@ class AI(object):
 	def play_disk(self):
 		"""plays a disk based the result from determine_best()
 		"""
+		print('ai plays')
 		num = random.randint(0, 22)
 		board.disks[num].disk = True
 		board.disks[num].surf = self.surf
@@ -230,31 +235,18 @@ def main():
 		
 		board.draw_board()
 
-		if not board.turns_paused:			
-			if board.turn == 'ai':					
-				ai.play_disk()	
-
-			elif board.turn == 'player':				
+		if not board.turns_paused:
+			if board.turn == 'ai':
+				ai.play_disk()
+			else:
 				player.play_disk()
-
-			player.x, player.y = 0, 0
+			player.x, player,y = 0, 0
 			board.blit_disks()
-			pygame.display.update()
-			fps_clock.tick(60)			
+			pygame.display.update()			
 
 		else:
-			time.sleep(0.2)
-			if board.turn == 'player':
-				board.turn == 'ai'
-			else:
-				board.turn == 'player'
+			if board.turn 
 
-			player.x, player.y = 0, 0
-			board.turns_paused = False
-			board.flip_disks()
-			board.blit_disks()
-			pygame.display.update()
-			fps_clock.tick(60)
 			
 
 if __name__ == '__main__':

@@ -852,3 +852,60 @@ if (click_index + (i * count)) < 0 or (click_index + (i * count)) > 63:
 			player.played_disk = False
 			ai.played_disk = False'''
 		
+
+		elif disk + (count * direction) < 0 or disk + (count * direction) > 63:
+				count = 1
+				checking = False			
+			elif board.disks[disk + (count * direction)].surf == whose_surf:
+				checking = False
+			elif board.disks[disk + (count * direction)].surf == box_image:
+				count = 1
+				checking = False
+			elif board.disks[disk + (count * direction)].surf != whose_surf:
+				count += 1
+				if direction == -1 or direction == -9 or direction == 7:
+					if (disk + (count * direction)) % 8 > (disk + (count * direction) - 1) % 8:
+						count = 1
+						checking = False
+				elif direction == 1 or direction == 9 or direction == -7:
+					if (disk + (count * direction)) % 8 < (disk + (count * direction) - 1) % 8:
+						count = 1
+						checking = False			
+
+
+
+'''for i in range(NUM_BOXES):
+			for j in [-9, -8, -7, -1, 1, 7, 8, 9]:
+				self.possible_moves.extend(board.determine_near(i, player.surf, j))
+		print(self.possible_moves)'''
+
+
+		if not board.turns_paused:		
+			if board.turn == 'ai':					
+				ai.play_disk()	
+
+			elif board.turn == 'player':			
+				player.play_disk()
+
+			player.x, player.y = 0, 0
+			board.blit_disks()
+			pygame.display.update()
+			fps_clock.tick(60)			
+
+		else:
+			print('board.turns is paused')
+			time.sleep(0.2)
+			if board.turn == 'player':				
+				board.turn == 'ai'
+				print('board.turn is players, switched to ai')		
+			else:
+				board.turn == 'player'
+				print('switching to player turn')
+
+			player.x, player.y = 0, 0
+			board.turns_paused = False
+			board.flip_disks()
+			board.blit_disks()
+			pygame.display.update()
+			fps_clock.tick(60)
+			print('updated after flipped')				
