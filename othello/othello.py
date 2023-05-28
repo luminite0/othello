@@ -133,8 +133,7 @@ class Board(object):
 		count = 1
 		disks_available = []
 		while checking:
-			check_disk = disk + (count * direction)
-			#print('check disk %i, count %i' % (check_disk, count))
+			check_disk = disk + (count * direction)			
 			
 			# check disk is not on the board
 			if check_disk < 0 or check_disk > 63:
@@ -177,18 +176,26 @@ class Player(object):
 
 	def play_disk(self):
 		"""activates box clicked if it's the player's turn
-		"""		
+		"""
+		temp = []
 		for d in board.disks:
 			if d.rect.collidepoint((player.x, player.y)) and not d.disk:				
 				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
 					temp = board.determine_near(d.index, player.surf, i)					
-					if temp != []:
+					if temp != []:						
 						# makes the disk visible
 						d.disk = True
 						d.surf = player.surf
 						board.last_played_index = d.index
-						board.turns_paused = True										
-			
+						board.turns_paused = True 
+		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+			temp += board.determine_near(board.last_played_index, player.surf, i)
+		for i in temp:
+			board.disks[i].disk = True
+			board.disks[i].surf = player.surf
+		
+		
+								
 
 class AI(object):
 	"""class for the ai's information
@@ -202,20 +209,41 @@ class AI(object):
 		"""returns the index of the best avaiable disk to flip
 		"""
 		possible_moves = []
-		for i in range(NUM_BOXES):
-			
-			pass
+		for d in board.disks:
+			for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+				temp = board.determine_near(d.index, self.surf, i)
+				if temp != []:
+					possible_moves += temp
+		temp = []
+		num = 0
+		for p in possible_moves:
+			if board.disks[p].disk is False:	
+				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:						
+					temp += board.determine_near(p, self.surf, i)
+					if p == 0 or p == 7 or p == 56 or p == 63:
+						num = p
+						continue				
+					elif len(temp) > num:					
+						num = p
+		return num		
 	
 
 	def play_disk(self):
 		"""plays a disk based the result from determine_best()
 		"""
-		print('ai plays')
-		num = random.randint(0, 22)
+		num = self.determine_best()
+		print('num is %r' % num)
+		time.sleep(random.randint(1, 4) * 0.5)		
 		board.disks[num].disk = True
 		board.disks[num].surf = self.surf
 		board.last_played_index = num
 		board.turns_paused = True
+		temp = []
+		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+			temp += board.determine_near(num, self.surf, i)
+		for i in temp:
+			board.disks[i].disk = True
+			board.disks[i].surf = self.surf
 		
 
 # main game function
@@ -235,18 +263,26 @@ def main():
 		
 		board.draw_board()
 
-		if not board.turns_paused:
-			if board.turn == 'ai':
-				ai.play_disk()
+		if board.turn == 'player':			
+			player.play_disk()
+
+
+		elif board.turn == 'ai':			
+			ai.play_disk()
+
+		if board.turns_paused is True:			
+			if board.turn == 'player':
+				board.turn = 'ai'				
 			else:
-				player.play_disk()
-			player.x, player,y = 0, 0
-			board.blit_disks()
-			pygame.display.update()			
+				board.turn = 'player'
+			board.turns_paused = False	
 
-		else:
-			if board.turn 
+		board.blit_disks()
+		pygame.display.update()
+		fps_clock.tick(60)
+		player.x, player.y = 0, 0
 
+		
 			
 
 if __name__ == '__main__':
