@@ -1,4 +1,3 @@
-# othello by me
 # setup
 import pygame
 ***REMOVED***
@@ -6,23 +5,19 @@ import random
 import time
 from pygame.locals import *
 pygame.init()
-fps_clock = pygame.time.Clock()
+clock = pygame.time.Clock()
 
 # constants
 WINDOW_WIDTH, WINDOW_HEIGHT = 556, 556
 BOARD_WIDTH, BOARD_HEIGHT = 356, 356
 WINDOW_BOARD_GAP = 100
 LINE_WIDTH = 4
-NUM_LINES = 7
-BOX_WIDTH = 44
 NUM_BOXES = 64
 BOX_ROW, BOX_COLUMN = 8, 8
 BOARD_TOP_X, BOARD_TOP_Y = 100, 100
 GREEN = (10,190,50)
-DARKBLUE = (68,85,242)
-WHITE = (255,255,255)
 BLACK = (0,0,0)
-GRAY = (127,127,127)
+
 
 main_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Othello")
@@ -43,8 +38,7 @@ class Disk(object):
 		self.y = y
 		self.surf = surf
 		self.rect = rect
-		self.disk = disk
-		self.color = None
+		self.disk = disk		
 		self.index = 0
 
 		
@@ -110,28 +104,21 @@ class Board(object):
 		for d in board.disks:			
 			main_surface.blit(d.surf, (d.x, d.y))
 
-	def flip_disks(self):
-		"""checks if disks are active and blits active ones to the screen
+	def flip_disks(self, whose_turn):
+		"""finds disks that need to be flipped and flips them
 		"""
 		disks_to_flip = []
 		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-			if board.turn == 'player':
-				disks_to_flip.extend(board.determine_near(\
-					board.last_played_index, player.surf, i))
-			else:
-				disks_to_flip.extend(board.determine_near(\
-					board.last_played_index, ai.surf, i))
-		for d in disks_to_flip:			
-			if board.turn == 'player':
-				board.disks[d].surf = player.surf
-			else:
-				board.disks[d].surf = ai.surf				
+			disks_to_flip.extend(board.determine_flippable(\
+				board.last_played_index, whose_turn.surf, i))
+		for d in disks_to_flip:
+			board.disks[d].surf = whose_turn.surf		
 	
-	def determine_near(self, disk, whose_surf, direction):
-		"""Determines if a disk is in direction"""
+	def determine_flippable(self, disk, whose_surf, direction):
+		"""Determines if a disk is flippable"""
 		checking = True
 		count = 1
-		disks_available = []
+		disks_flippable = []
 		while checking:
 			check_disk = disk + (count * direction)			
 			
@@ -139,6 +126,7 @@ class Board(object):
 			if check_disk < 0 or check_disk > 63:
 				count = 1
 				checking = False
+			# check if a disk is not there
 			elif board.disks[check_disk].surf == box_image:
 				count = 1
 				checking = False
@@ -148,8 +136,9 @@ class Board(object):
 			# check disk is not the enemy's
 			elif board.disks[check_disk].surf == whose_surf:
 				checking = False
+
 			# going left and wrapped around
-			elif (direction == -9 or direction == -1 or direction == 7) and \
+			if (direction == -9 or direction == -1 or direction == 7) and \
 			(check_disk > check_disk - 1):
 				count = 1
 				checking = False
@@ -157,13 +146,13 @@ class Board(object):
 			elif (direction == -7 or direction == 1 or direction == 9) and \
 			(check_disk < check_disk - 1):
 				count = 1
-				checking = False
+				checking = False			
 
 		# add count disks from direction to avaiable_disks
 		if count != 1:
 			for c in range(count):
-				disks_available.append(disk + ((c * direction)))				
-		return disks_available
+				disks_flippable.append(disk + ((c * direction)))				
+		return disks_flippable
 		
 
 class Player(object):
@@ -181,7 +170,7 @@ class Player(object):
 		for d in board.disks:
 			if d.rect.collidepoint((player.x, player.y)) and not d.disk:				
 				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-					temp = board.determine_near(d.index, player.surf, i)					
+					temp = board.determine_flippable(d.index, player.surf, i)					
 					if temp != []:						
 						# makes the disk visible
 						d.disk = True
@@ -189,7 +178,7 @@ class Player(object):
 						board.last_played_index = d.index
 						board.turns_paused = True 
 		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-			temp += board.determine_near(board.last_played_index, player.surf, i)
+			temp += board.determine_flippable(board.last_played_index, player.surf, i)
 		for i in temp:
 			board.disks[i].disk = True
 			board.disks[i].surf = player.surf
@@ -200,8 +189,7 @@ class Player(object):
 class AI(object):
 	"""class for the ai's information
 	"""
-	def __init__(self):			
-		#self.color = None
+	def __init__(self):		
 		self.surf = None
 	
 
@@ -211,7 +199,7 @@ class AI(object):
 		possible_moves = []
 		for d in board.disks:
 			for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-				temp = board.determine_near(d.index, self.surf, i)
+				temp = board.determine_flippable(d.index, self.surf, i)
 				if temp != []:
 					possible_moves += temp
 		temp = []
@@ -219,7 +207,7 @@ class AI(object):
 		for p in possible_moves:
 			if board.disks[p].disk is False:	
 				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:						
-					temp += board.determine_near(p, self.surf, i)
+					temp += board.determine_flippable(p, self.surf, i)
 					if p == 0 or p == 7 or p == 56 or p == 63:
 						num = p
 						continue				
@@ -240,7 +228,7 @@ class AI(object):
 		board.turns_paused = True
 		temp = []
 		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-			temp += board.determine_near(num, self.surf, i)
+			temp += board.determine_flippable(num, self.surf, i)
 		for i in temp:
 			board.disks[i].disk = True
 			board.disks[i].surf = self.surf
@@ -279,7 +267,7 @@ def main():
 
 		board.blit_disks()
 		pygame.display.update()
-		fps_clock.tick(60)
+		clock.tick(60)
 		player.x, player.y = 0, 0
 
 		
