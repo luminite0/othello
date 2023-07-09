@@ -33,7 +33,7 @@ class Disk(object):
 	"""class for the disks. for now each disk is invisible
 	until activated by either player or ai
 	"""
-	def __init__(self, x, y, surf, rect, disk=False):	
+	def __init__(self, x, y, surf, rect, disk=False):		
 		self.x = x
 		self.y = y
 		self.surf = surf
