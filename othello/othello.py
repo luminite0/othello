@@ -3,8 +3,8 @@ import pygame
 ***REMOVED***
 import random
 import time
-from pygame.locals import *
-pygame.init()
+from pygame.locals import * # type: ignore
+pygame.init() # type: ignore
 clock = pygame.time.Clock()
 
 # constants
@@ -47,10 +47,11 @@ class Board(object):
 	"""
 	def __init__(self):
 		self.disks = []
-		self.turn = None
+		self.turn = ''
 		self.last_played_index = 36
 		self.possible_moves = []
-		self.turns_paused = False
+		self.turns_paused = False		
+		self.need_to_animate = []
 				
 	def draw_board(self):
 		"""draws background color frame for boxes and disks""" 
@@ -139,7 +140,7 @@ class Board(object):
 
 			# going left and wrapped around
 			if (direction == -9 or direction == -1 or direction == 7) and \
-			(check_disk > check_disk - 1):
+			(check_disk > check_disk + 1):
 				count = 1
 				checking = False
 			# going right and wrapped around
@@ -166,22 +167,23 @@ class Player(object):
 	def play_disk(self):
 		"""activates box clicked if it's the player's turn
 		"""
-		temp = []
+		board.need_to_animate = []
 		for d in board.disks:
 			if d.rect.collidepoint((player.x, player.y)) and not d.disk:				
 				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-					temp = board.determine_flippable(d.index, player.surf, i)					
-					if temp != []:						
+					board.need_to_animate = board.determine_flippable(d.index, player.surf, i)					
+					if board.need_to_animate != []:						
 						# makes the disk visible
 						d.disk = True
 						d.surf = player.surf
 						board.last_played_index = d.index
-						board.turns_paused = True 
+						board.turns_paused = True						
 		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-			temp += board.determine_flippable(board.last_played_index, player.surf, i)
-		for i in temp:
+			board.need_to_animate += board.determine_flippable(board.last_played_index, player.surf, i)
+		'''for i in board.need_to_animate:
 			board.disks[i].disk = True
-			board.disks[i].surf = player.surf
+			board.disks[i].surf = player.surf'''
+		
 		
 		
 								
@@ -212,65 +214,84 @@ class AI(object):
 						num = p
 						continue				
 					elif len(temp) > num:					
-						num = p
+						num = p	
 		return num		
 	
 
 	def play_disk(self):
 		"""plays a disk based the result from determine_best()
 		"""
-		num = self.determine_best()
-		print('num is %r' % num)
+		num = self.determine_best()		
 		time.sleep(random.randint(1, 4) * 0.5)		
 		board.disks[num].disk = True
 		board.disks[num].surf = self.surf
-		board.last_played_index = num
-		board.turns_paused = True
-		temp = []
+		board.last_played_index = num		
+		board.need_to_animate = []
 		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
-			temp += board.determine_flippable(num, self.surf, i)
-		for i in temp:
+			board.need_to_animate += board.determine_flippable(num, self.surf, i)
+		'''for i in temp:
 			board.disks[i].disk = True
-			board.disks[i].surf = self.surf
-		
+			board.disks[i].surf = self.surf'''
+		board.turns_paused = True
+
 
 # main game function
 def main():
 	
 	while True:
-		
-		for event in pygame.event.get():
-			if event.type == pygame.locals.QUIT:
-				pygame.quit()
-				sys.exit()
-			elif event.type == pygame.locals.MOUSEBUTTONUP:
-				if board.turn == 'player':
-					player.x, player.y = event.pos
-				else:
-					player.x, player.y = 0, 0
-		
+
 		board.draw_board()
 
-		if board.turn == 'player':			
-			player.play_disk()
+		if board.turns_paused is False:
+			
+			for event in pygame.event.get():
+				if event.type == pygame.locals.QUIT: # type: ignore
+					pygame.quit() # type: ignore
+					sys.exit()
+				elif event.type == pygame.locals.MOUSEBUTTONUP: # type: ignore
+					if board.turn == 'player':
+						player.x, player.y = event.pos
+					else:
+						player.x, player.y = 0, 0
+		
 
+			if board.turn == 'player':			
+				player.play_disk()
 
-		elif board.turn == 'ai':			
-			ai.play_disk()
-
-		if board.turns_paused is True:			
+			elif board.turn == 'ai':			
+				ai.play_disk()
+			
+			board.blit_disks()
+			pygame.display.update()
+			clock.tick(60)
+			player.x, player.y = 0, 0
+		else:						
 			if board.turn == 'player':
-				board.turn = 'ai'				
+				for n in board.need_to_animate:
+					board.disks[n].surf = player.surf
+					board.blit_disks()					
+					pygame.display.update()
+					clock.tick(60)
+					time.sleep(0.2)
+				board.turn = 'ai'
+				board.turns_paused = False
+				board.need_to_animate = []
 			else:
+				for n in board.need_to_animate:
+					board.disks[n].surf = ai.surf
+					board.blit_disks()					
+					pygame.display.update()
+					clock.tick(60)
+					time.sleep(0.2)
 				board.turn = 'player'
-			board.turns_paused = False	
+				board.turns_paused = False					
+				board.need_to_animate = []
 
 		board.blit_disks()
 		pygame.display.update()
 		clock.tick(60)
 		player.x, player.y = 0, 0
 
-		
 			
 
 if __name__ == '__main__':
