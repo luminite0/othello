@@ -52,6 +52,10 @@ class Board(object):
 		self.possible_moves = []
 		self.turns_paused = False		
 		self.need_to_animate = []
+		self.top_row = [x for x in range(0,8)]
+		self.bottom_row = [x for x in range(56,64)]
+		self.left_column = [x for x in range(0,57,8)]
+		self.right_column = [x for x in range(7,64,8)]
 				
 	def draw_board(self):
 		"""draws background color frame for boxes and disks""" 
@@ -116,7 +120,10 @@ class Board(object):
 			board.disks[d].surf = whose_turn.surf		
 	
 	def determine_flippable(self, disk, whose_surf, direction):
-		"""Determines if a disk is flippable"""
+		"""Returns a list of the indexes of the 'disk' and any disks 
+		that need to be flipped when the 'disk' is played. Returns [] 
+		if move is invalid
+		"""
 		checking = True
 		count = 1
 		disks_flippable = []
@@ -136,19 +143,20 @@ class Board(object):
 				count += 1
 			# check disk is not the enemy's
 			elif board.disks[check_disk].surf == whose_surf:
-				checking = False
-
-			# going left and wrapped around
-			if (direction == -9 or direction == -1 or direction == 7) and \
-			(check_disk > check_disk + 1):
-				count = 1
-				checking = False
-			# going right and wrapped around
-			elif (direction == -7 or direction == 1 or direction == 9) and \
-			(check_disk < check_disk - 1):
-				count = 1
 				checking = False			
+			
+			# going left and on disk on leftmost column, so cannot check left
+			if (direction == -9 or direction == -1 or direction == 7) and \
+			(check_disk in board.left_column):		
+				count = 1
+				checking = False
 
+			# going left and on disk on rightmost column, so cannot check right
+			elif (direction == -7 or direction == 1 or direction == 9) and \
+			(check_disk in board.right_column):				
+				count = 1
+				checking = False
+			print('check disk %d, count %d, direction %d' % (check_disk, count, direction))
 		# add count disks from direction to avaiable_disks
 		if count != 1:
 			for c in range(count):
@@ -199,9 +207,12 @@ class AI(object):
 		"""returns the index of the best avaiable disk to flip
 		"""
 		possible_moves = []
+		# check for all possible moves in every direction for every space
 		for d in board.disks:
 			for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
+				# assign a possible disk to flip to a temporary variable
 				temp = board.determine_flippable(d.index, self.surf, i)
+				# check that the move is valid
 				if temp != []:
 					possible_moves += temp
 		temp = []
@@ -265,24 +276,26 @@ def main():
 			pygame.display.update()
 			clock.tick(60)
 			player.x, player.y = 0, 0
-		else:						
+		else: # turns are paused, flip the disks now
 			if board.turn == 'player':
+				time.sleep(0.4)
 				for n in board.need_to_animate:
 					board.disks[n].surf = player.surf
 					board.blit_disks()					
 					pygame.display.update()
 					clock.tick(60)
-					time.sleep(0.2)
+					time.sleep(0.05)
 				board.turn = 'ai'
 				board.turns_paused = False
 				board.need_to_animate = []
 			else:
+				time.sleep(0.4)
 				for n in board.need_to_animate:
 					board.disks[n].surf = ai.surf
 					board.blit_disks()					
 					pygame.display.update()
 					clock.tick(60)
-					time.sleep(0.2)
+					time.sleep(0.05)
 				board.turn = 'player'
 				board.turns_paused = False					
 				board.need_to_animate = []
