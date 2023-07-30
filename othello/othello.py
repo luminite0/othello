@@ -147,21 +147,22 @@ class Board(object):
 			
 			# going left and on disk on leftmost column, so cannot check left
 			if (direction == -9 or direction == -1 or direction == 7) and \
-			(check_disk in board.left_column):		
+			((check_disk + 1) in board.left_column):		
 				count = 1
 				checking = False
 
 			# going left and on disk on rightmost column, so cannot check right
 			elif (direction == -7 or direction == 1 or direction == 9) and \
-			(check_disk in board.right_column):				
+			((check_disk - 1) in board.right_column):				
 				count = 1
 				checking = False
-			print('check disk %d, count %d, direction %d' % (check_disk, count, direction))
+			
 		# add count disks from direction to avaiable_disks
 		if count != 1:
 			for c in range(count):
 				disks_flippable.append(disk + ((c * direction)))				
 		return disks_flippable
+				
 		
 
 class Player(object):
@@ -219,12 +220,13 @@ class AI(object):
 		num = 0
 		for p in possible_moves:
 			if board.disks[p].disk is False:	
-				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:						
+				for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
 					temp += board.determine_flippable(p, self.surf, i)
-					if p == 0 or p == 7 or p == 56 or p == 63:
+					if p == 0 or p == 7 or p == 56 or p == 63: # can play in a corner
 						num = p
-						continue				
-					elif len(temp) > num:					
+						continue
+					
+					elif len(temp) > num:
 						num = p	
 		return num		
 	
