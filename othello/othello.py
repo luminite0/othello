@@ -94,7 +94,7 @@ class Board(object):
 			temp_x = int(WINDOW_BOARD_GAP + (LINE_WIDTH / 2) \
 						 + (44 * box_column))			
 			temp_y = int(WINDOW_BOARD_GAP + (LINE_WIDTH / 2) \
-						 + (44 * box_row))			
+						 + (44 * box_row))
 			disk = Disk(temp_x, temp_y, box_image, box_image.get_rect( \
 						topleft=(temp_x, temp_y)))
 			disk.index = i
@@ -145,15 +145,19 @@ class Board(object):
 			elif board.disks[check_disk].surf == whose_surf:
 				checking = False			
 			
-			# going left and on disk on leftmost column, so cannot check left
+			# going left, and the current disk to check is in the left column, and 
+			# it is not the enemy's, so cannot keep checking			
 			if (direction == -9 or direction == -1 or direction == 7) and \
-			((check_disk + 1) in board.left_column):		
+			(check_disk in board.left_column) and (board.disks[check_disk].surf != \
+			whose_surf):
 				count = 1
 				checking = False
 
-			# going left and on disk on rightmost column, so cannot check right
+			# going right, and the next disk to check is on the left column (meaning
+			# the checking would wrap around the board)
 			elif (direction == -7 or direction == 1 or direction == 9) and \
-			((check_disk - 1) in board.right_column):				
+			(check_disk in board.left_column) and (board.disks[check_disk].surf != \
+			whose_surf):
 				count = 1
 				checking = False
 			
