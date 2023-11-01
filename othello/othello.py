@@ -27,10 +27,14 @@ box_image = pygame.image.load('media/box.png')
 black_disk_image = pygame.image.load('media/black_disk.png')
 white_disk_image = pygame.image.load('media/white_disk.png')
 
+pygame.mixer.init()
+pygame.mixer.music.load('media/background-music.mp3')
+pygame.mixer.music.play()
+
 
 # classes 
 class Disk(object):
-	"""class for the disks. for now each disk is invisible
+	"""class for the disks. For now each disk is invisible
 	until activated by either player or ai
 	"""
 	def __init__(self, x, y, surf, rect, disk=False):		
@@ -43,7 +47,7 @@ class Disk(object):
 
 		
 class Board(object):
-	"""class for the game turn and disks
+	"""Class for the game turn and disks
 	"""
 	def __init__(self):
 		self.disks = []
@@ -58,14 +62,15 @@ class Board(object):
 		self.right_column = [x for x in range(7,64,8)]
 				
 	def draw_board(self):
-		"""draws background color frame for boxes and disks""" 
+		"""Draws background color frame for boxes and disks
+		""" 
 		main_surface.fill(GREEN)
 		pygame.draw.rect(main_surface, BLACK, pygame.Rect(BOARD_TOP_X, \
 						 BOARD_TOP_Y, BOARD_WIDTH - 1, BOARD_HEIGHT - 1), \
 						 int(LINE_WIDTH/2))
 	
 	def setup_mid_four(self):
-		"""setup the middle four disks
+		"""Setup the middle four disks
 		"""
 		if random.randint(0, 1) == 1:
 			board.disks[27].surf = black_disk_image
@@ -84,7 +89,7 @@ class Board(object):
 		board.disks[36].disk = True
 		
 	def create_disks(self):
-		"""create 64 disks and store them in self.disks
+		"""Create 64 disks and store them in self.disks
 		"""
 		box_row = 0
 		box_column = 0
@@ -110,7 +115,7 @@ class Board(object):
 			main_surface.blit(d.surf, (d.x, d.y))
 
 	def flip_disks(self, whose_turn):
-		"""finds disks that need to be flipped and flips them
+		"""Finds disks that need to be flipped and flips them
 		"""
 		disks_to_flip = []
 		for i in [-9, -8, -7, -1, 1, 7, 8, 9]:
@@ -170,7 +175,7 @@ class Board(object):
 		
 
 class Player(object):
-	"""class for player's information
+	"""Class for player and their mouse's information
 	"""
 	def __init__(self):
 		self.x = 0
@@ -178,7 +183,7 @@ class Player(object):
 		self.surf = None		
 
 	def play_disk(self):
-		"""activates box clicked if it's the player's turn
+		"""Activates box clicked if it's the player's turn
 		"""
 		board.need_to_animate = []
 		for d in board.disks:
@@ -202,14 +207,14 @@ class Player(object):
 								
 
 class AI(object):
-	"""class for the ai's information
+	"""Class for the ai's information
 	"""
 	def __init__(self):		
 		self.surf = None
 	
 
 	def determine_best(self):
-		"""returns the index of the best avaiable disk to flip
+		"""Returns the index of the best avaiable disk to flip
 		"""
 		possible_moves = []
 		# check for all possible moves in every direction for every space
@@ -236,7 +241,7 @@ class AI(object):
 	
 
 	def play_disk(self):
-		"""plays a disk based the result from determine_best()
+		"""Plays a disk based the result from determine_best()
 		"""
 		num = self.determine_best()		
 		time.sleep(random.randint(1, 4) * 0.5)		
