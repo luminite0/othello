@@ -40,7 +40,7 @@ class Disk:
         self.top_row = False
         self.bot_row = False
 
-        self.active = False # should the disk be visible
+        self.active = False # is the disk be visible
         self.color = ""
         self.surf = ""
         self.rect = ()
