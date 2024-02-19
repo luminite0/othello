@@ -14,7 +14,9 @@ NUMBER_OF_DISKS = 64
 # Next two are by number of disks not pixels
 ROW_LENGTH = 8
 COL_LENGTH = 8
-WINDOW_RES = (600, 600)
+WINDOW_WIDTH = 600
+WINDOW_HEIGHT = 600
+WINDOW_RES = (WINDOW_WIDTH, WINDOW_HEIGHT)
 BOARD_RES = (400, 400)
 BOARD_GREEN_BORDER = 100 # Green space between window and board (all directions)
 BORDER_LINE_WIDTH = 5
@@ -50,6 +52,12 @@ resume_image = pygame.image.load("media/resume.png")
 resume_image = pygame.Surface.convert(resume_image)
 
 
+font = pygame.font.Font("media/NotoSerif-Bold.ttf", 30)
+title_screen_text = font.render('Choose your color', True, BLACK)
+title_screen_text_rect = title_screen_text.get_rect()
+title_screen_text_rect.center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 400)
+
+
 
 class Disk:
 
@@ -66,12 +74,20 @@ class Game:
 
     def __init__(self):
         self.clock = pygame.time.Clock()
+        self.paused = False
+        self.has_begun = False
         self.setup_game()
+
 
     def setup_game(self):
         # Create 64 disks, as well as set up turns
         self.turn = "" # Either AI or PLAYER
         self.create_disks()
+        self.player = Player()
+        self.ai = AI()
+
+        #self.display_title_screen()
+
         
     def create_disks(self):
         self.disks = []
@@ -101,11 +117,35 @@ class Game:
             self.disks[35].surf = white_disk
             self.disks[36].surf = black_disk
 
+
+    def display_title_screen(self):
+        main_window.blit(title_screen_text, title_screen_text_rect)
+        self.choose_white_rect = white_disk.get_rect()
+        self.choose_black_rect = black_disk.get_rect()
+        self.choose_white_rect.center = (WINDOW_WIDTH / 3, WINDOW_HEIGHT - 300)
+        self.choose_black_rect.center = (2 * (WINDOW_WIDTH) / 3, WINDOW_HEIGHT - 300)
+        main_window.blit(white_disk, self.choose_white_rect)
+        main_window.blit(black_disk, self.choose_black_rect)
+
+        if pygame.Rect.collidepoint(self.choose_black_rect, (self.player.mouse_x, self.player.mouse_y)):
+            self.player.color = "black"
+            self.has_begun = True
+
+        elif pygame.Rect.collidepoint(self.choose_white_rect, (self.player.mouse_x, self.player.mouse_y)):
+            self.player.color = "white"
+            self.has_begun = True
+
+
+        
+
+
     def check_valid_move(self):
         pass
 
+
     def change_turns(self):
         pass
+
 
     def blit_disks(self):
         for d in self.disks:
@@ -113,11 +153,19 @@ class Game:
 
 class Player:
 
+    def __init__(self):
+        self.color = ""
+        self.mouse_x = 0
+        self.mouse_y = 0
+
     def place_disk(self):
         pass
 
 
 class AI:
+
+    def __init__(self):
+        self.color = ""
 
     def determine_best_move(self):
         pass
@@ -131,16 +179,25 @@ def main():
 
     while True:
         main_window.fill(GREEN)
-        pygame.draw.rect(main_window, BLACK, BORDER_LINE_COORDS, BORDER_LINE_WIDTH)
-
+        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                game.player.mouse_x, game.player.mouse_y = pygame.mouse.get_pos()
+
+        if game.has_begun:
+            # game logic here
+
+            pygame.draw.rect(main_window, BLACK, BORDER_LINE_COORDS, BORDER_LINE_WIDTH)
+            game.blit_disks()
+
+        else:
+            game.display_title_screen()
 
 
-        game.blit_disks()
         pygame.display.flip()
         game.clock.tick(60)
     
@@ -149,3 +206,18 @@ def main():
 if __name__ == "__main__":
     game = Game()
     main()
+
+    """
+    The player must play disks onto the board. When they play a disk such that their color sandwiches disks of the other player's in any direction, not wrapping around the board, and no empty spots in between the disks, then those disks are flipped to the player's color.
+
+Disks
+    Flip
+Game
+    setup_game
+    check_valid_move
+    turns
+Player
+    Place
+AI
+    determine_best_move
+    place_disk"""
