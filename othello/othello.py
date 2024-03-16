@@ -62,12 +62,15 @@ title_screen_text_rect.center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 400)
 class Disk:
 
     def __init__(self):
+        # surf/rect, and board coords (from [0,0] to [7,7]-- 8x8 board)
         self.surf = empty_box
         self.rect = empty_box.get_rect()
         self.board_coords = [0, 0]
 
     def flip(self):
+        # change disk color from b to w or w to b
         pass
+
 
 
 class Game:
@@ -83,13 +86,14 @@ class Game:
         # Create 64 disks, as well as set up turns
         self.turn = "" # Either AI or PLAYER
         self.create_disks()
+        # instance for player and AI to hold mouse pos, color, and AI code etc.
         self.player = Player()
         self.ai = AI()
 
-        #self.display_title_screen()
-
         
     def create_disks(self):
+        # create instance of disk and assign to self.disk for each of 64 disks on board
+        # also assign board coords and rect
         self.disks = []
         for R in range(ROW_LENGTH):
             for C in range(COL_LENGTH):
@@ -104,7 +108,9 @@ class Game:
                 disk.rect = (self.temp_x, self.temp_y)
                 self.disks.append(disk)
         
-        # set up middle disks
+        # randomly sets the center disks to one of two possibilities:
+        # wb   or  bw
+        # bw       wb
         random_int = random.randint(0, 1)
         if random_int is 1:
             self.disks[27].surf = white_disk
@@ -119,7 +125,9 @@ class Game:
 
 
     def display_title_screen(self):
+        # blit "Choose your color" to title
         main_window.blit(title_screen_text, title_screen_text_rect)
+        # 1 w and 1 b disk will be blitted, get their rects and centers and then blit
         self.choose_white_rect = white_disk.get_rect()
         self.choose_black_rect = black_disk.get_rect()
         self.choose_white_rect.center = (WINDOW_WIDTH / 3, WINDOW_HEIGHT - 300)
@@ -127,13 +135,24 @@ class Game:
         main_window.blit(white_disk, self.choose_white_rect)
         main_window.blit(black_disk, self.choose_black_rect)
 
+        # if player chooses (clicks) black
         if pygame.Rect.collidepoint(self.choose_black_rect, (self.player.mouse_x, self.player.mouse_y)):
             self.player.color = "black"
+            self.turn = "AI"
             self.has_begun = True
-
+        # if player chooses (clicks) white
         elif pygame.Rect.collidepoint(self.choose_white_rect, (self.player.mouse_x, self.player.mouse_y)):
             self.player.color = "white"
+            self.turn = "PLAYER"
             self.has_begun = True
+
+        
+    def play(self):
+        if self.turn == "AI":
+            self.ai.place_disk()
+            self.turn = "PLAYER"
+        pass
+
 
 
         
@@ -151,6 +170,8 @@ class Game:
         for d in self.disks:
             main_window.blit(d.surf, d.rect)
 
+
+
 class Player:
 
     def __init__(self):
@@ -160,6 +181,7 @@ class Player:
 
     def place_disk(self):
         pass
+
 
 
 class AI:
@@ -173,9 +195,9 @@ class AI:
     def place_disk(self):
         pass
 
+
+
 def main():
-
-
 
     while True:
         main_window.fill(GREEN)
@@ -191,6 +213,7 @@ def main():
         if game.has_begun:
             # game logic here
 
+            # Draw border box around disks and blit them
             pygame.draw.rect(main_window, BLACK, BORDER_LINE_COORDS, BORDER_LINE_WIDTH)
             game.blit_disks()
 
