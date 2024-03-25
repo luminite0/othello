@@ -1,29 +1,45 @@
-import pygame
-from pytest import *
-from othello.othello import Player, AI, Disk
+import pytest
+***REMOVED***
+import os
 
-black_disk_image = pygame.image.load('media/black_disk.png')
-white_disk_image = pygame.image.load('media/white_disk.png')
+sys.path.append(os.getcwd())
 
-def test_player():
-	player = Player()
-	player.x, player.y = 200, 150
-	player.surf = black_disk_image
-	player.played_disk = False
-	assert player.x == 200
-	assert player.y == 150
-	assert player.surf == black_disk_image
-	assert player.played_disk == False
+from othello.othello import *
 
-def test_ai():
-	ai = AI()
-	ai.surf = white_disk_image
-	assert ai.surf == white_disk_image
 
 def test_disk():
-	disk = Disk(100, 100, black_disk_image, black_disk_image.get_rect(topleft=(100, 100), bottomright=(144, 144)), disk=True)
-	assert disk.x == 100
-	assert disk.y == 100
-	assert disk.surf == black_disk_image
-	assert disk.rect == black_disk_image.get_rect(topleft=(100, 100), bottomright=(144, 144))
-	assert disk.disk == True
+    disk = Disk()
+    disk.surf = empty_box
+    assert disk.surf == empty_box
+    disk.surf = white_disk
+    assert disk.surf == white_disk
+    disk.surf = black_disk
+    assert disk.surf == black_disk
+
+def test_flip():
+    disk = Disk()
+
+    disk.surf = white_disk
+    disk.flip()
+    assert disk.surf == black_disk
+
+    disk.surf = black_disk
+    disk.flip()
+    assert disk.surf == white_disk
+
+def test_setup():
+    game = Game()
+    game.player = Player()
+    game.choose_black_rect = pygame.Rect
+
+def test_get_flippable_disks():
+    game = Game()
+    disk = Disk()
+    disk.board_coords = [3, 5]
+    disk.surf = white_disk
+    another_disk = Disk()
+    another_disk.board_coords = [4, 5]
+    another_disk.surf = white_disk
+    game.get_flippable_disks(disk)
+
+test_get_flippable_disks()
