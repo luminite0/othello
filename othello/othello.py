@@ -162,65 +162,84 @@ class Game:
         
 
 
-    def get_flippable_disks(self, disk):
+    def get_flippable_disks(self, check_disk):
 
-        # list of board coords for disks which can be flipped if disk param is flipped
+        # dictionary which holds what disks can be flipped in given direction
+        # directions are indicated in [x, y] disks from starting disk argument
         flippable_disks = {
-            "lu": [], # left and up direction
-            "u": [], # directly up
-            "ru": [], # right and up
-            "l": [], # left
-            "r": [], # right
-            "ld": [], # left and down
-            "d": [], # down
-            "rd": [] # right and down
-        }
-
-        direction_to_str = {
             -1: {
-                -1: "lu",
-                0: "l",
-                1: "ld",
+                -1: [],
+                0: [],
+                1: [],
             },
             0: {
-                -1: "u",
-                1: "d"
+                -1: [],
+                1: []
             },
             1: {
-                -1: "ru",
-                0: "r",
-                1: "rd"
+                -1: [],
+                0: [],
+                1: []
             }  
         }
 
-        # check if a row/col/diagonal of disks can be flipped given a starting disk
         # directions (up and left is [-1,-1], down and right is [1,1] etc.) for board coords
         directions = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
             
         for d in directions:
-            # board coords of disk to check
-            board_check_x = disk.board_coords[0] + d[0]
-            board_check_y = disk.board_coords[1] + d[1]
-
-            # use direction_to_str to convert the d of direction list into a str
-            # which will be used later to keep track of disk coords in given direction
-            # to flip
-            direction_str = direction_to_str[d[0]][d[1]]
-            #print(direction_str)
-
-            # if disktocheck's surf isn't the surf of disk passed in as arg (so it's enemy color)
-            if (self.disks[board_check_x][board_check_y].surf != disk.surf):
-                flippable_disks[direction_str] = []
-                continue
-
-            if disk.surf == self.disks[board_check_x][board_check_y].surf:
-
-                pass
-
-            """ fix this later"""
-
-
             
+            # counter to determine if there's space in between two disks of same color
+            counter = 0 
+                 
+            # board coords of disk to check
+            board_check_x = check_disk.board_coords[0] + d[0]
+            board_check_y = check_disk.board_coords[1] + d[1]
+            # check for disks of opposite color in all directions from check_disk
+            while True:
+
+                # if the disk to be checked is actually an empty box
+                if self.disks[board_check_x][board_check_y].surf == empty_box:
+                    flippable_disks[d[0]][d[1]] = [] # no disks in that direction
+                    print("%d %d is an empty box" % (self.disks[board_check_x][board_check_y].board_coords[0], self.disks[board_check_x][board_check_y].board_coords[1]))
+                    break
+                
+                # not empty box, and != check_disk.surf so is enemy disk
+                elif self.disks[board_check_x][board_check_y].surf != check_disk.surf:
+                    # find the list for the given direction [d[0], d[1]], and add current disk to it
+                    flippable_disks[d[0]][d[1]].append(self.disks[board_check_x][board_check_y])
+                    # increment the board coords of the disks to check
+                    board_check_x += d[0]
+                    board_check_y += d[1]
+                    counter += 1
+                    print("%d %d is an enemy disk" % (self.disks[board_check_x][board_check_y].board_coords[0], self.disks[board_check_x][board_check_y].board_coords[1]))
+
+                # if current disk to check is same color as check_disk
+                elif self.disks[board_check_x][board_check_y].surf == check_disk.surf:
+                    print("%d %d is an check_disk box" % (self.disks[board_check_x][board_check_y].board_coords[0], self.disks[board_check_x][board_check_y].board_coords[1]))
+                    if counter == 0: # this disk is directly next to check_disk
+                        flippable_disks[d[0]][d[1]] = [] # no disks to flip in this direction
+                        break
+                    else:
+                        # reached end of "sandwhich"
+                        break
+                
+                
+                # checking would wrap around the board so stop
+                if board_check_x == 0 or board_check_x == 7:
+                    flippable_disks[d[0]][d[1]] = []
+                    break
+                # checking would go above/below actual board
+                if board_check_y == 0 or board_check_y == 7:
+                    flippable_disks[d[0]][d[1]] = []
+                    break
+
+        final_flippable_disks = []
+        for d in directions:
+            # iterate through dictionary of list of flippable disks
+            final_flippable_disks.append(flippable_disks[d[0]][d[1]])
+        return final_flippable_disks
+            
+
             
 
     def change_turns(self):
