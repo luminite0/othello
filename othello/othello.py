@@ -1,6 +1,7 @@
 import pygame
 ***REMOVED***
 import random
+import datetime
 
 pygame.init()
 
@@ -13,6 +14,8 @@ NUMBER_OF_DISKS = 64
 # disks per row/col
 ROW_LENGTH = 8
 COL_LENGTH = 8
+DISK_WIDTH, DISK_HEIGHT = 50, 50 # pixels
+# pixels
 WINDOW_WIDTH = 600
 WINDOW_HEIGHT = 600
 WINDOW_RES = (WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -27,6 +30,10 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 
+# variables for the AI to determine how long to wait before making a move
+start_move_time = 0
+stop_move_time = 0
+
 
 main_window = pygame.display.set_mode(WINDOW_RES)
 pygame.display.set_caption("Othello")
@@ -36,19 +43,19 @@ pygame.display.set_caption("Othello")
 
 # assets
 
-empty_box = pygame.image.load("media/empty_box.png")
-emtpy_box = pygame.Surface.convert(empty_box)
-white_disk = pygame.image.load("media/white_disk.png")
-white_disk = pygame.Surface.convert(white_disk)
-black_disk = pygame.image.load("media/black_disk.png")
-black_disk = pygame.Surface.convert(black_disk)
+empty_box_img = pygame.image.load("media/empty_box.png")
+empty_box = pygame.Surface.convert(empty_box_img)
+white_disk_img = pygame.image.load("media/white_disk.png")
+white_disk = pygame.Surface.convert(white_disk_img)
+black_disk_img = pygame.image.load("media/black_disk.png")
+black_disk = pygame.Surface.convert(black_disk_img)
 
-help_image = pygame.image.load("media/help.png")
-help_image = pygame.Surface.convert(help_image)
-quit_image = pygame.image.load("media/quit.png")
-quit_image = pygame.Surface.convert(quit_image)
-resume_image = pygame.image.load("media/resume.png")
-resume_image = pygame.Surface.convert(resume_image)
+help_image_img = pygame.image.load("media/help.png")
+help_image = pygame.Surface.convert(help_image_img)
+quit_image_img = pygame.image.load("media/quit.png")
+quit_image = pygame.Surface.convert(quit_image_img)
+resume_image_img = pygame.image.load("media/resume.png")
+resume_image = pygame.Surface.convert(resume_image_img)
 
 
 font = pygame.font.Font("media/NotoSerif-Bold.ttf", 30)
@@ -66,7 +73,6 @@ class Disk:
         self.board_coords = [0, 0] # 0,0, to 8,8
 
     def flip(self):
-        # change disk color from b to w or w to b
         if self.surf == white_disk:
             self.surf = black_disk
         else:
@@ -92,22 +98,23 @@ class Game:
 
         
     def create_disks(self):
-        # create instance of disk (self.disk) for each 64, and assign 
+        # create instance of disk (self.disk) for each 64, and assign
         # also assign board coords, and pixel coords/rect
         self.disks = []
         for R in range(ROW_LENGTH):
             col_list = []
             for C in range(COL_LENGTH):
                 disk = Disk()
-                disk.board_coords = [C, R] # 0,0 to 8,8
-                # 100 + (50 * C) means the 100 pixels of blank space between
-                # the window and the board + 50 (the width of each box) * how ever columns along
+                disk.board_coords = (C, R) # 0,0 to 7,7
+                # 100 + (50 * C) is the 100 pixels of blank space between the window
+                # and the board + 50 (width of box) * number of columns along the board
                 self.temp_x = 100 + (50 * C)
                 self.temp_y = 100 + (50 * R)
-                disk.rect = (self.temp_x, self.temp_y)
+                # Rect(left, top, width, height)
+                disk.rect = pygame.Rect(self.temp_x, self.temp_y, DISK_WIDTH, DISK_HEIGHT)
                 col_list.append(disk)
             self.disks.append(col_list)
-        
+
         # randomly sets the center disks to one of two possibilities:
         # |wb|   or  |bw|
         # |bw|       |wb|
@@ -128,44 +135,65 @@ class Game:
         # blit "Choose your color" to title
         main_window.blit(title_screen_text, title_screen_text_rect)
         # 1 w and 1 b disk will be blitted, get their rects and centers and then blit
-        self.choose_white_rect = white_disk.get_rect()
-        self.choose_black_rect = black_disk.get_rect()
-        self.choose_white_rect.center = (WINDOW_WIDTH / 3, WINDOW_HEIGHT - 300)
-        self.choose_black_rect.center = (2 * (WINDOW_WIDTH) / 3, WINDOW_HEIGHT - 300)
-        main_window.blit(white_disk, self.choose_white_rect)
-        main_window.blit(black_disk, self.choose_black_rect)
+        self.white_rect = white_disk.get_rect()
+        self.black_rect = black_disk.get_rect()
+        self.white_rect.center = (WINDOW_WIDTH / 3, WINDOW_HEIGHT - 300)
+        self.black_rect.center = (2 * (WINDOW_WIDTH) / 3, WINDOW_HEIGHT - 300)
+        main_window.blit(white_disk, self.white_rect)
+        main_window.blit(black_disk, self.black_rect)
 
-        # if player chooses (clicks) black
-        if pygame.Rect.collidepoint(self.choose_black_rect, (self.player.mouse_coords)):
+        # if player clicks black
+        if pygame.Rect.collidepoint(self.black_rect, (self.player.mouse_coords)):
             self.player.color = "black"
+            self.player.surf = black_disk
+            self.ai.surf = white_disk
             self.turn = "AI"
             self.has_begun = True
-        # if player chooses (clicks) white
-        elif pygame.Rect.collidepoint(self.choose_white_rect, (self.player.mouse_coords)):
+            # reset mouse coords so they don't affect the game
+            self.player.mouse_coords = (0, 0)
+        # if player clicks white
+        elif pygame.Rect.collidepoint(self.white_rect, (self.player.mouse_coords)):
             self.player.color = "white"
+            self.player.surf = white_disk
+            self.ai.surf = black_disk
             self.turn = "PLAYER"
             self.has_begun = True
+            # reset mouse coords so they don't affect the game
+            self.player.mouse_coords = (0, 0)
 
     
         
     def play(self):
+
+        # self passed in to change turn and blit disks from within play/place_disk
         if self.turn == "AI":
-            self.ai.place_disk()
-            self.turn = "PLAYER"
+            self.ai.place_disk(self) 
+
         elif self.turn == "PLAYER":
-            self.player.play(self) # self passed in to change turn from play method
-
-        pass
+            self.player.play(self) 
 
 
 
+    def get_flippable_disks(self, check_disk, current_turn):
+
+        # current_turn can be either "AI" or "PLAYER"
+
+        # surf/color of the player who's turn it is (AI or human player)
+        current_turn_surf = empty_box
+        enemy_surf = empty_box
         
+        if current_turn == "AI":
+            current_turn_surf = self.ai.surf
+            enemy_surf = self.player.surf
+        else:
+            current_turn_surf = self.player.surf
+            enemy_surf = self.ai.surf
+    
 
-
-    def get_flippable_disks(self, check_disk):
 
         # dictionary which holds what disks can be flipped in given direction
-        # directions are indicated in [x, y] disks from starting disk argument
+        # directions are indicated in [x, y] disks from starting disk argument,
+        # e.g. flippable_disks[1][-1] holds the disks that are +x -y from original
         flippable_disks = {
             -1: {
                 -1: [],
@@ -184,59 +212,63 @@ class Game:
         }
 
         # directions (up and left is [-1,-1], down and right is [1,1] etc.) for board coords
+        # first number is x direction, second is in y direction
         directions = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
             
         for d in directions:
             
             # counter to determine if there's space in between two disks of same color
-            counter = 0 
+            counter = 0
                  
-            # board coords of disk to check
+            # board coords of disk to check: original disk's coords + number from directions list
             board_check_x = check_disk.board_coords[0] + d[0]
             board_check_y = check_disk.board_coords[1] + d[1]
+
             # check for disks of opposite color in all directions from check_disk
             while True:
+
+                
+                # current disk that is being checked is not on the board
+                if board_check_x > 7 or board_check_y > 7 or board_check_x < 0 or board_check_y < 0:
+                    # there are no flippable disks in this direction, so clear the list for this direction
+                    flippable_disks[d[0]][d[1]] = []
+                    #print(f"Not in board: {board_check_x}, {board_check_y}\n")
+                    break
 
                 # if the disk to be checked is actually an empty box
                 if self.disks[board_check_x][board_check_y].surf == empty_box:
                     flippable_disks[d[0]][d[1]] = [] # no disks in that direction
-                    print("%d %d is an empty box" % (self.disks[board_check_x][board_check_y].board_coords[0], self.disks[board_check_x][board_check_y].board_coords[1]))
+                    #print(f"Empty box: {board_check_x}, {board_check_y}\n")
                     break
                 
                 # not empty box, and != check_disk.surf so is enemy disk
-                elif self.disks[board_check_x][board_check_y].surf != check_disk.surf:
-                    # find the list for the given direction [d[0], d[1]], and add current disk to it
+                elif self.disks[board_check_x][board_check_y].surf == enemy_surf:
+                    # find the list for the given direction (d[0], d[1]), and add current disk to it
                     flippable_disks[d[0]][d[1]].append(self.disks[board_check_x][board_check_y])
+
                     # increment the board coords of the disks to check
                     board_check_x += d[0]
                     board_check_y += d[1]
-                    counter += 1
-                    print("%d %d is an enemy disk" % (self.disks[board_check_x][board_check_y].board_coords[0], self.disks[board_check_x][board_check_y].board_coords[1]))
+                    counter += 1 # increment counter
 
                 # if current disk to check is same color as check_disk
-                elif self.disks[board_check_x][board_check_y].surf == check_disk.surf:
-                    print("%d %d is an check_disk box" % (self.disks[board_check_x][board_check_y].board_coords[0], self.disks[board_check_x][board_check_y].board_coords[1]))
+                elif self.disks[board_check_x][board_check_y].surf == current_turn_surf:
+                    #print(f"Same surf as check_disk: {board_check_x}, {board_check_y}\n")
                     if counter == 0: # this disk is directly next to check_disk
                         flippable_disks[d[0]][d[1]] = [] # no disks to flip in this direction
-                        break
-                    else:
-                        # reached end of "sandwhich"
-                        break
-                
-                
-                # checking would wrap around the board so stop
-                if board_check_x == 0 or board_check_x == 7:
-                    flippable_disks[d[0]][d[1]] = []
-                    break
-                # checking would go above/below actual board
-                if board_check_y == 0 or board_check_y == 7:
-                    flippable_disks[d[0]][d[1]] = []
+                    # otherwise, reached end of "sandwhich" of disks
                     break
 
+        # a different list to make returning the flippable disks easier because they are
+        # currently in a 2d dictionary
         final_flippable_disks = []
+        # iterate through flippable_disks using directions list
         for d in directions:
-            # iterate through dictionary of list of flippable disks
-            final_flippable_disks.append(flippable_disks[d[0]][d[1]])
+            # if there are any disks in this direction
+            if flippable_disks[d[0]][d[1]] != []:
+                # for each of the disks in each of the the lists in the dictionary
+                for i in flippable_disks[d[0]][d[1]]:
+                    final_flippable_disks.append(i)
         return final_flippable_disks
             
 
@@ -259,16 +291,27 @@ class Player:
 
     def __init__(self):
         self.color = ""
+        self.surf = empty_box
         self.mouse_coords = (0,0)
 
-    def play(self, game_class):
-        # needs to be i and d because self.disks is now list of lists instead of disks
-        # to make accessing disks by board coords easier
-        for i in game_class.disks:
+    def play(self, game):
+        # needs to be i and d because self.disks is now list of lists of disks
+        # "game" is passed in to change the turn of the game when the player makes a move
+        
+        for i in game.disks:
             for d in i:
-                if (d.surf != empty_box) and (pygame.Rect.collidepoint(d.rect, self.mouse_coords)):
-                    # fix
-                    pass
+                if (d.surf == empty_box) and (pygame.Rect.collidepoint(d.rect, self.mouse_coords)):
+                    flippable_disks = game.get_flippable_disks(d, "PLAYER")
+
+                    # if there are actually disks that the player can flip
+                    if flippable_disks != []:
+                        # change the color of the disks
+                        for f in flippable_disks:
+                            f.surf = self.surf
+
+                        game.turn = "AI"
+                        # reset mouse coords
+                        self.mouse_coords = (0,0)
 
     def place_disk(self):
         pass
@@ -279,12 +322,35 @@ class AI:
 
     def __init__(self):
         self.color = ""
+        self.surf = empty_box
 
     def determine_best_move(self):
+        # calculate the best move to make, going multiple turns deep
         pass
 
-    def place_disk(self):
-        pass
+    def place_disk(self, game):
+        global start_move_time
+        global stop_move_time
+        
+        # how much time the AI should spend "thinking"
+        thinking_time = random.randint(2, 5)
+
+        # start_move_time will be set to 0 after the AI makes a move
+        # so it can re-calculate how long it has been for the next move
+        if start_move_time == 0:
+            start_move_time = datetime.datetime.now()
+        
+        stop_move_time = datetime.datetime.now()
+        # calculate if the timeframe (thinking_time) has elapsed, so AI can
+        # actually make a move now
+        move_time_difference = stop_move_time - start_move_time
+        if move_time_difference.seconds > thinking_time:
+            # make a move
+
+        
+            game.turn = player
+            # reset start_move_time so the AI knows it can reassign a time to it
+            start_move_time = 0
 
 
 
@@ -302,15 +368,16 @@ def main():
                 game.player.mouse_coords = pygame.mouse.get_pos()
 
         if game.has_begun:
-            # game logic here
+            # main game logic here
 
             # Draw border box around disks and blit them
             pygame.draw.rect(main_window, BLACK, BORDER_LINE_COORDS, BORDER_LINE_WIDTH)
             game.blit_disks()
 
+            game.play()
+
         else:
             game.display_title_screen()
-
 
         pygame.display.flip()
         game.clock.tick(60)

@@ -46,38 +46,43 @@ def test_create_disks():
     game.disks[1][4].surf = white_disk
     game.disks[1][5].surf = black_disk
 
+    game.disks[1][1].board_coords = [1, 1]
+    game.disks[1][2].board_coords = [1, 2]
+    game.disks[1][3].board_coords = [1, 3]
+    game.disks[1][4].board_coords = [1, 4]
+    game.disks[1][5].board_coords = [1, 5]
+
     assert game.disks[1][1].surf == black_disk
     assert game.disks[1][2].surf == white_disk
     assert game.disks[1][3].surf == white_disk
     assert game.disks[1][4].surf == white_disk
     assert game.disks[1][5].surf == black_disk
+
+
+    assert game.disks[1][1].board_coords == [1, 1]
+    assert game.disks[1][2].board_coords == [1, 2]
+    assert game.disks[1][3].board_coords == [1, 3]
+    assert game.disks[1][4].board_coords == [1, 4]
+    assert game.disks[1][5].board_coords == [1, 5]
+
+
+
 
 def test_get_flippable_disks():
     game = Game()
+    game.player.color = "white"
 
-    game.disks[1][1].surf = black_disk
-    game.disks[1][2].surf = white_disk
-    game.disks[1][3].surf = white_disk
-    game.disks[1][4].surf = white_disk
-    game.disks[1][5].surf = black_disk
+    game.disks[1][1].surf = white_disk
+    game.disks[1][2].surf = black_disk
+    game.disks[1][3].surf = empty_box
 
-    test_disks = [
-        game.disks[1][1],
-        game.disks[1][2],
-        game.disks[1][3],
-        game.disks[1][4],
-        game.disks[1][5]
-    ]
+    assert game.disks[1][1].surf == white_disk
+    assert game.disks[1][2].surf == black_disk
+    assert game.disks[1][3].surf == empty_box
 
-    assert game.disks[1][1].surf == black_disk
-    assert game.disks[1][2].surf == white_disk
-    assert game.disks[1][3].surf == white_disk
-    assert game.disks[1][4].surf == white_disk
-    assert game.disks[1][5].surf == black_disk
+    what_disks = game.get_flippable_disks(game.disks[1][3], "PLAYER")
+    assert len(what_disks) == 1 , print(what_disks)
+    assert what_disks[0] == game.disks[1][2]
 
-    assert game.disks[1][4].surf != empty_box
-    print(self.disks[1][5])
+
     
-    flippable_disks = game.get_flippable_disks(test_disks[4])
-
-test_get_flippable_disks()
