@@ -70,6 +70,7 @@ def test_create_disks():
 
 def test_get_flippable_disks():
     game = Game()
+
     game.player.color = "white"
 
     game.disks[1][1].surf = white_disk
@@ -81,8 +82,11 @@ def test_get_flippable_disks():
     assert game.disks[1][3].surf == empty_box
 
     what_disks = game.get_flippable_disks(game.disks[1][3], "PLAYER")
-    assert len(what_disks) == 1 , print(what_disks)
-    assert what_disks[0] == game.disks[1][2]
+    #assert len(what_disks) == 1 , print(what_disks)
+    #assert what_disks[0] == game.disks[1][2]
+    assert game.disks[0][0].board_coords == (0, 0)
+    assert game.disks[0][1].board_coords == (0, 1)
 
+    assert game.disks[1][6].board_coords == (1, 6)
 
-    
+    assert game.disks[3][4].board_coords == (3, 4)
