@@ -381,8 +381,12 @@ class Game:
         if player_count == 0 and ai_count == 0:
             self.game_over()
 
-        # there are not any disks which are playable for this player
-        elif count == 0:
+self.flip is false
+self.flip is false
+self.flip is false
+self.flip is false
+self.flip is false
+
             if turn == "PLAYER":
                 self.display_play_again_message("PLAYER")
             else:
@@ -689,7 +693,7 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    sys.exit()
+                    sys.exit()  
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     game.player.mouse_coords = pygame.mouse.get_pos()
 
