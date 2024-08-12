@@ -1,4 +1,3 @@
-import datetime
 import pygame
 import random
 ***REMOVED***
@@ -29,17 +28,11 @@ BORDER_LINE_COORDS = (95, 95, 410, 410) # 410 is added to 95
 GREEN = (10, 190, 50) # #0abf32
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-
-
-# variables for the AI to determine how long to wait before making a move
-start_move_time = 0
-stop_move_time = 0
+GRAY = (128, 128, 128)
 
 
 main_window = pygame.display.set_mode(WINDOW_RES)
 pygame.display.set_caption("Othello")
-
-
 
 
 # assets
@@ -50,6 +43,8 @@ white_disk_img = pygame.image.load("media/white_disk.png")
 white_disk = pygame.Surface.convert(white_disk_img)
 black_disk_img = pygame.image.load("media/black_disk.png")
 black_disk = pygame.Surface.convert(black_disk_img)
+gray_disk_img = pygame.image.load("media/gray_disk.png")
+gray_disk = pygame.Surface.convert(gray_disk_img)
 
 help_image_img = pygame.image.load("media/help.png")
 help_image = pygame.Surface.convert(help_image_img)
@@ -100,8 +95,6 @@ class Game:
         self.paused = False
         self.has_begun = False
         self.over = False
-        # period of time where disks are flipped after move is made
-        self.flipping_disks = False 
         self.setup_game()
 
 
@@ -195,36 +188,17 @@ class Game:
         
     def play(self):
 
-        if not self.over:
-            self.flipping_disks = False
-            print('self.flip is false')
+        if self.turn == "AI":
+            self.ai.play(self, self.player)
+        elif self.turn == "PLAYER":
+            self.player.play(self)
 
-            if not self.flipping_disks:
-                if self.turn == "AI":
-                    # self.player passed in because ai needs to know the surf of the player
-                    disks_to_flip = self.ai.play(self, self.player)
-                    disks_surf = self.ai.surf # surf to flip disks to
-                    self.flipping_disks = True
-
-
-                elif self.turn == "PLAYER":
-                    disks_to_flip = self.player.play(self)
-                    disks_surf = self.player.surf # surf to flip disks to
-                    self.flipping_disks = True
-
-            else: # flipping disks now
-                self.flip_disks(disks_to_flip, disks_surf)
-
-        else: # game is over
-            self.game_over()        
 
 
 
     def get_flippable_disks(self, check_disk, current_turn):
         # accepts disk object for check_disk and string for current_turn
-
         # current_turn can be either "AI" or "PLAYER"
-
         # surf/color of the player who's turn it is (AI or human player)
         current_turn_surf = empty_box
         enemy_surf = empty_box
@@ -315,28 +289,6 @@ class Game:
                     final_flippable_disks.append(i)
         
         return final_flippable_disks
-
-
-    def flip_disks(self, disks_to_flip, surf):
-        self.flipping_disks = True
-        disks_to_flip = disks_to_flip
-        previous_time = datetime.datetime.now()
-        flip_disk_delay = 0.4
-
-        if disks_to_flip != []:
-            current_time = datetime.datetime.now()
-            time_elapsed = current_time - previous_time
-            if time_elapsed.seconds == flip_disk_delay:
-                # change surf of disk
-                d.surf = surf
-                # remove first disk from list because it has already been flipped
-                disks_to_flip = disks_to_flip[1:]
-                # reset the previous time a disk was flipped                
-                previous_time = datetime.datetime.now()
-        else:
-            self.flipping_disks = False
-        
-
         
 
     def blit_disks(self):
@@ -346,57 +298,39 @@ class Game:
             for d in i:
                 main_window.blit(d.surf, d.rect)
 
-
+    
     def are_disks_playable(self, turn):
-
         # turn is either "PLAYER" or "AI"
 
-        # counter to determine how many places a disk can be placed
-        count = 0
+
+        # check if disks can be played by either player
+
+        can_player_play = False
+        can_ai_play = False
+        
         for d in self.disks:
             for i in d:
                 if i.surf == empty_box:
-                    flippable_disks = self.get_flippable_disks(i, turn)
-                    if flippable_disks != []:
-                        count += 1
+                    if (self.get_flippable_disks(i, "PLAYER")) != []:
+                        can_player_play = True
 
-        # check if no disks can be played by anyone (so game over)
-        player_count = 0
-        for d in self.disks:
-            for i in d:
-                if i.surf == empty_box:
-                    flippable_disks = self.get_flippable_disks(i, "PLAYER")
-                    if flippable_disks != []:
-                        player_count += 1
+                    if (self.get_flippable_disks(i, "AI")) != []:
+                        can_ai_play = True
 
-        # check if any disks at all can be played
-        ai_count = 0
-        for d in self.disks:
-            for i in d:
-                if i.surf == empty_box:
-                    flippable_disks = self.get_flippable_disks(i, "AI")
-                    if flippable_disks != []:
-                        ai_count += 1
 
-        if player_count == 0 and ai_count == 0:
+        if (not can_player_play) and (not can_ai_play):
             self.game_over()
 
-self.flip is false
-self.flip is false
-self.flip is false
-self.flip is false
-self.flip is false
+        if turn == "AI":
+            if can_ai_play:
+                return True
+        
+        elif turn == "PLAYER":
+            if can_player_play:
+                return True
 
-            if turn == "PLAYER":
-                self.display_play_again_message("PLAYER")
-            else:
-                self.display_play_again_message("AI")
-            # disks are not playable
-            return 0
-        else:
-            # disks are playable
-            return 1
-            
+        return False
+
 
     def display_play_again_message(self, turn):
         if turn == "AI":
@@ -409,7 +343,7 @@ self.flip is false
         time.sleep(1)
         
 
-    def game_over():
+    def game_over(self):
         self.over = True
         # iterate through all the disks and count how many of each color
         black_disks = 0
@@ -422,19 +356,21 @@ self.flip is false
                 elif d.surf == black_disk:
                     black_disks += 1
         if white_disks > black_disks:
-            self.game_over_text = font.render("Game Over! White won")
+            self.game_over_text = font.render("Game Over! White won", True, WHITE)
         elif white_disks < black_disks:
-            self.game_over_text = font.render("Game Over! Black")
+            self.game_over_text = font.render("Game Over! Black won", True, BLACK)
         elif white_disks == black_disks:
-            self.game_over_text = font.render("Game Over! It's a tie")
+            self.game_over_text = font.render("Game Over! It's a tie", True, GRAY)
 
         self.game_over_text_rect = self.game_over_text.get_rect()
-        self.game_over_text_rect.center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)
-        main_window.blit(game_over_text, game_over_text_rect)
-
+        self.game_over_text_rect.center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 400)
+        while True:
+            main_window.blit(self.game_over_text, self.game_over_text_rect)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
             
-
-
 
 
 
@@ -444,31 +380,65 @@ class Player:
         self.color = ""
         self.surf = empty_box
         self.mouse_coords = (0,0)
+        self.flipping_disks = False
+        self.disks_to_flip = []
+        # for flipping disks. 0 means disk needs to be flipped to gray, 1 means it
+        # needs to be flipped to player.surf
+        self.count = 0
+        # used to figure out how much time has elapsed between flipping
+        # disks animations
+        self.stop_flip_time = 0
+        self.start_flip_time = 0
+        # how many seconds to delay between stages of the disk flip animation
+        self.delay_time = 0.2
 
     def play(self, game):
         # needs to be i and d because self.disks is now list of lists of disks
         # "game" is passed in to change the turn of the game when the player makes a move
+
+        if not self.flipping_disks:
+            for i in game.disks:
+                for d in i:
+                    if (d.surf == empty_box) and (pygame.Rect.collidepoint(d.rect, self.mouse_coords)):
+                        self.disks_to_flip = game.get_flippable_disks(d, "PLAYER")
+                        # if there are actually disks that the player can flip
+                        if self.disks_to_flip != []:
+                            # flip d immediately, then flip the rest of the disks
+                            d.surf = self.surf
+                            self.flipping_disks = True
+                            self.stop_flip_time = time.time()
         
-        for i in game.disks:
-            for d in i:
-                if (d.surf == empty_box) and (pygame.Rect.collidepoint(d.rect, self.mouse_coords)):
-                    disks_to_flip = game.get_flippable_disks(d, "PLAYER")
+        else:
+            if self.disks_to_flip != []:
+                self.start_flip_time = time.time()
+                print(self.start_flip_time - self.stop_flip_time)
+                if (self.start_flip_time - self.stop_flip_time) >= self.delay_time:
+                    print('ok')
+                    if self.count == 0:
+                        self.disks_to_flip[0].surf = gray_disk
+                        self.count = 1
+                        self.stop_flip_time = time.time()
+                    elif self.count == 1:
+                        self.disks_to_flip[0].surf = self.surf
+                        self.disks_to_flip = self.disks_to_flip[1:]
+                        self.count = 0
+                        self.stop_flip_time = time.time()
 
-                    # if there are actually disks that the player can flip
-                    if disks_to_flip != []:
-                        
-                        # d needs to be flipped because the player clicked it
-                        disks_to_flip.append(d)
-
-                        # if there are not disks playable for the ai
-                        if game.are_disks_playable("AI") == 0:
-                            game.turn = "PLAYER"
-                        else:
-                            game.turn = "AI"
-                        # reset mouse coords
-                        self.mouse_coords = (0,0)
-
-                        return disks_to_flip
+            else:
+                if game.are_disks_playable("AI"):
+                    game.turn = "AI"
+                else:
+                    if game.are_disks_playable("PLAYER"):
+                        game.turn = "PLAYER"
+                    else:
+                        game.game_over()
+                # reset mouse coords
+                self.mouse_coords = (0,0)
+                self.disks_to_flip = []
+                self.flipping_disks = False
+                self.count = 0
+                self.stop_flip_time = 0
+                self.start_flip_time = 0
 
 
 
@@ -477,6 +447,16 @@ class AI:
     def __init__(self):
         self.color = ""
         self.surf = empty_box
+        self.disks_to_flip = []
+        self.flipping_disks = False
+        self.count = 0
+        self.stop_flip_time = 0
+        self.start_flip_time = 0
+        self.delay_time = 0.2
+        # variables for the AI to determine how long to wait before making a move
+        self.stop_move_time = 0
+        self.start_move_time = 0
+        self.thinking_time = 3
 
     def determine_best_move(self, game, player):
 
@@ -486,7 +466,7 @@ class AI:
         corner_disks = []
 
         best_disk = None
-        max_disks_flipped = 0
+        max_disks_flipped = 0       
         # list for if there are multiple best disks
         best_disks = []
 
@@ -552,6 +532,28 @@ class AI:
                                             # add current one to best because it is as good as other(s)
                                             player_best_disks.append(i_1)
 
+                                else: # player cannot play so ai can only look at the first layer of its possible moves
+
+                                    best_disk = None
+                                    best_disk_count = 0
+                                    # reset the disk that was flipped to recalculate the best disk
+                                    # without looking multiple moves ahead
+                                    i_0.surf = i_0_current_surf
+                                    for d_3 in game.disks:
+                                        for i_3 in d_3:
+                                            if i_3.surf == empty_box:
+                                                flippable_disks = game.get_flippable_disks(i_3, "AI")
+                                                if flippable_disks != []:
+                                                    if i_3.board_coords in corner_coords:
+                                                        best_disk = i_3
+                                                        return best_disk
+                                                    else:
+                                                        if len(flippable_disks) > best_disk_count:
+                                                            best_disk = i_3
+                                                            best_disk_count = len(flippable_disks)
+                                    return best_disk                
+
+
                         # no corner disks so best disk is in best disks
                         if player_corner_disks == []:
                             player_best_disk = random.choice(player_best_disks)
@@ -559,6 +561,10 @@ class AI:
                         else:
                             player_best_disk = random.choice(player_corner_disks)
                         
+                        
+
+
+                             
                         # surf of player_best_disk so it can be changed and changed back
                         player_best_disk_surf = player_best_disk.surf
                         # change the surf of the disk that the player might play
@@ -591,49 +597,12 @@ class AI:
                                     elif (len(flippable_disks) + len(second_flippable_disks)) == max_disks_flipped:
                                         # this disk is as good as the others
                                         best_disks.append(i_0)
-
-
-
-
-                                    """
-                                    # if none of the disks it can play for the second turn 
-                                    # are in a corner
-                                    if second_corner_disks == []:
-                                        if len(second_flippable_disks) > (second_max_disks_flipped):
-                                            second_max_disks_flipped = len(second_flippable_disks)
-                                            # this is best disk so forget about others
-                                            second_best_disk = []
-                                            # add this disk to best
-                                            second_best_disk.append(i_2)
-                                        elif len(second_flippable_disks) == second_max_disks_flipped:
-                                            # ties with other(s)
-                                            second_best_disk.append(i_2)
-                                    """
-                        
         
 
                         # change surfs back to what they were
                         i_0.surf = i_0_current_surf
                         player_best_disk.surf = player_best_disk_surf
 
-
-
-
-
-
-                        """
-                        # finds which disk will flip the maximum amount of disks when placed    
-                        if len(flippable_disks) > max_disks_flipped:
-                            max_disks_flipped = len(flippable_disks)
-                            best_disk = i_0
-                            # clear the best disks, because this disk is best
-                            best_disks = []
-                        elif len(flippable_disks) == max_disks_flipped:
-                            # if there are multiple tying best disks, a random
-                            # one will be chosen
-                            best_disks.append(i_0)
-                        """
-        
         if corner_disks == []:
             best_disk = random.choice(best_disks)
         else:
@@ -644,75 +613,77 @@ class AI:
 
 
     def play(self, game, player):
-        global start_move_time
-        global stop_move_time
 
-        # delay in between flipping each disk
-        flip_disk_delay = 1 
-        previous_time = datetime.datetime.now()
+        if not self.flipping_disks:
+            self.stop_move_time = time.time()
+            # calculate if the timeframe (thinking_time) has elapsed, so AI can
+            # actually make a move now
+            time_elapsed = self.stop_move_time - self.start_move_time
+            if time_elapsed > self.thinking_time:
+                # make a move
+                best_move = self.determine_best_move(game, player)
 
-        
-        # how much time the AI should spend "thinking"
-        thinking_time = random.randint(0,0)
+                # which disks does the AI need to flip after playing its disk
+                self.disks_to_flip = game.get_flippable_disks(best_move, "AI")
 
-        # start_move_time will be set to 0 after the AI makes a move
-        # so it can re-calculate how long it has been for the next move
-        if start_move_time == 0:
-            start_move_time = datetime.datetime.now()
-        
-        stop_move_time = datetime.datetime.now()
-        # calculate if the timeframe (thinking_time) has elapsed, so AI can
-        # actually make a move now
-        thinking_delay = stop_move_time - start_move_time
-        if thinking_delay.seconds > thinking_time:
-            # make a move
-            best_move = self.determine_best_move(game, player)
+                # flip d immediately, then flip the rest of the disks
+                best_move.surf = self.surf
+                self.flipping_disks = True
+                self.stop_flip_time = time.time()
+        else:
+            if self.disks_to_flip != []:
+                self.start_flip_time = time.time()
+                if (self.start_flip_time - self.stop_flip_time) >= self.delay_time:
+                    if self.count == 0:
+                        self.disks_to_flip[0].surf = gray_disk
+                        self.count = 1
+                        self.stop_flip_time = time.time()
+                    elif self.count == 1:
+                        self.disks_to_flip[0].surf = self.surf
+                        self.disks_to_flip = self.disks_to_flip[1:]
+                        self.count = 0
+                        self.stop_flip_time = time.time()
             
-            # which disks does the AI need to flip after playing its disk
-            disks_to_flip = game.get_flippable_disks(best_move, "AI")
+            else:
 
-            # add to disks_to_flipped so there can be a delay after it is placed
-            disks_to_flip.append(best_move)
+                if game.are_disks_playable("PLAYER"):
+                    game.turn = "PLAYER"
+                else:
+                    if game.are_disks_playable("AI"):
+                        game.turn = "AI"
+                    else:
+                        game.game_over()
 
-            game.turn = "PLAYER"
-            # reset start_move_time so the AI knows it can reassign a time to it
-            start_move_time = 0
-
-            return disks_to_flip
-
-
+                # reset stuff
+                self.disks_to_flip = []
+                self.flipping_disks = False
+                self.count = 0
+                self.stop_flip_time = 0
+                self.start_flip_time = 0
 
 
 def main():
 
-    while True:
+    while not game.over:
         main_window.fill(GREEN)
         
-        if not game.over and not game.flipping_disks:
-            print(f'ok{random.randint(0,100)}')
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()  
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    game.player.mouse_coords = pygame.mouse.get_pos()
+    
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()  
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                game.player.mouse_coords = pygame.mouse.get_pos()
 
-        if not game.over:
-            if game.has_begun:
-                # main game logic here
-
-                # Draw border box around disks and blit them
-                pygame.draw.rect(main_window, BLACK, BORDER_LINE_COORDS, BORDER_LINE_WIDTH)
-                game.blit_disks()
-
-                game.play()
-
-            else: # game hasn't begun yet
-                game.display_title_screen()
-
-        else: # game is over
-            main_window.blit(game.game_over_text, game.game_over_text_rect)
-
+  
+        if game.has_begun:
+            # main game logic here
+            # Draw border box around disks and blit them
+            pygame.draw.rect(main_window, BLACK, BORDER_LINE_COORDS, BORDER_LINE_WIDTH)
+            game.blit_disks()       
+            game.play()
+        else: # game hasn't begun yet
+            game.display_title_screen()
 
         pygame.display.flip()
         game.clock.tick(60)
