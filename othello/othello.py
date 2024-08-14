@@ -378,6 +378,7 @@ class Game:
             if quit_text_rect.collidepoint(self.player.mouse_coords):
                 pygame.quit()
                 sys.exit()
+            self.player.mouse_coords = (0, 0)
             pygame.display.flip()
             self.clock.tick(60)    
 
@@ -447,7 +448,7 @@ class Player:
                 self.flipping_disks = False
                 self.count = 0
                 self.stop_flip_time = 0
-                self.start_flip_time = 0        
+                self.start_flip_time = 0
 
 
 
