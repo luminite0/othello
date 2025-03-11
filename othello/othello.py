@@ -1,6 +1,5 @@
 import pygame
 import random
-***REMOVED***
 import time
 
 from pygame.locals import *
