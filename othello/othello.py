@@ -46,13 +46,6 @@ black_disk = pygame.Surface.convert(black_disk_img)
 gray_disk_img = pygame.image.load("media/gray_disk.png")
 gray_disk = pygame.Surface.convert(gray_disk_img)
 
-#help_image_img = pygame.image.load("media/help.png")
-#help_image = pygame.Surface.convert(help_image_img)
-#quit_image = pygame.image.load("media/quit.png")
-#quit_button = pygame.Surface.convert(quit_image)
-#resume_image_img = pygame.image.load("media/resume.png")
-#resume_image = pygame.Surface.convert(resume_image_img)
-
 
 font = pygame.font.Font("media/NotoSerif-Bold.ttf", 30)
 
